@@ -6,6 +6,8 @@
  */
 
  #include "../include/data.h"
+ #include <stdlib.h>
+ #include <string.h>
 
  struct data_t *data_create(int ano, float preco, enum marca_t marca, const char *modelo, enum combustivel_t combustivel)
 {
