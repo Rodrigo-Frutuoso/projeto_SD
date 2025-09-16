@@ -16,7 +16,7 @@ struct list_t *list_create() {
     if (!list) return NULL;
     list->size = 0;
     list->head = NULL;
-    return list;
+    return list; 
 }
 
 int list_destroy(struct list_t *list) {
