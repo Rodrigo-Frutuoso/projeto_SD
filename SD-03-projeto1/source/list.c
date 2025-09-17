@@ -42,22 +42,21 @@ int list_destroy(struct list_t *list)
 int list_add(struct list_t *list, struct data_t *car)
 {
     if(!list || !car) return -1;
-    struct car_t *car_added = malloc(sizeof(struct car_t));;
-    if(!car_added){
-        car_added->data = car;
-        car_added->next = NULL;
-    }
+    struct car_t *car_added = malloc(sizeof(struct car_t));
+    if(!car_added) return -1;
+    car_added->data = car;
+    car_added->next = NULL;
     if(list->head == NULL){
-        list->head = car;
-        list->size++;
+        list->head = car_added;
     }else {
         struct car_t *car = list->head;
         while (car->next) {
             car = car->next;
         }
-        cur->next = node;
-        list->size++;
+        car->next = car_added;
     }
+    list->size++;
+    return 0;
 }
 
 
