@@ -92,3 +92,31 @@ struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca){
     return NULL;
 }
 
+
+struct data_t **list_get_by_year(struct list_t *list, int ano)
+{
+    if (!list) return NULL;
+    int count = 0;
+    struct car_t *car = list->head;
+    while (car) {
+        if (car->data && car->data->ano == ano) count++;
+        car = car->next;
+    }
+    struct data_t **arr = malloc((count + 1) * sizeof(struct data_t *));
+    if (!arr) return NULL;
+    if (count == 0) {
+        arr[0] = NULL;
+        return arr;
+    }
+    int i = 0;
+    car = list->head;
+    while (car) {
+        if (car->data && car->data->ano == ano) {
+            arr[i++] = car->data;
+        }
+        car = car->next;
+    }
+    arr[i] = NULL;
+    return arr;
+}
+
