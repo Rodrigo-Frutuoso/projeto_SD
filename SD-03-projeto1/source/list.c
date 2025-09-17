@@ -59,4 +59,25 @@ int list_add(struct list_t *list, struct data_t *car)
     return 0;
 }
 
+int list_remove_by_model(struct list_t *list, const char *modelo)
+{
+    if(!list || !modelo) return -1;
+    struct car_t *car = list->head;
+    struct car_t *car_backup = NULL;
+        while (car) {
+            if(car->data && car->data->modelo && strcmp(car->data->modelo, modelo) == 0) {
+                if (car_backup) car_backup->next = car->next;
+                else list->head = car->next;
+                data_destroy(car->data);
+                free(car);
+                list->size--;
+                return 0; 
+            }else{
+                car_backup = car;
+                car = car->next;
+            }
+        }
+    return 1;    
+}
+
 
