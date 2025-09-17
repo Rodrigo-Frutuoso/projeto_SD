@@ -1,31 +1,31 @@
 #ifndef _DATA_H
 #define _DATA_H /* Módulo data */
 
-enum marca_t
+enum mar                                                                    _t
 {
- MARCA_TOYOTA,
- MARCA_BMW,
- MARCA_RENAULT,
- MARCA_AUDI,
- MARCA_MERCEDES
+    MARCA_TOYOTA,
+    MARCA_BMW,
+    MARCA_RENAULT,
+    MARCA_AUDI,
+    MARCA_MERCEDES
 };
 
 enum combustivel_t
 {
- COMBUSTIVEL_GASOLINA,
- COMBUSTIVEL_GASOLEO,
- COMBUSTIVEL_ELETRICO,
- COMBUSTIVEL_HIBRIDO
+    COMBUSTIVEL_GASOLINA,
+    COMBUSTIVEL_GASOLEO,
+    COMBUSTIVEL_ELETRICO,
+    COMBUSTIVEL_HIBRIDO
 };
 
 /* Estrutura que define os dados de um automóvel */
 struct data_t
 {
- int ano;
- float preco;
- enum marca_t marca;
- char *modelo;
- enum combustivel_t combustivel;
+    int ano;
+    float preco;
+    enum marca_t marca;
+    char *modelo;
+    enum combustivel_t combustivel;
 };
 
 /* Função que cria um novo elemento de dados data_t.

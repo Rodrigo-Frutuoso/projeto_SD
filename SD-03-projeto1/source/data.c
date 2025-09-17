@@ -17,7 +17,7 @@
     data->ano = ano;
     data->preco = preco;
     data->marca = marca;
-    data->modelo = strdup(modelo);
+    data->modelo = strdup(modelo); //ibertar com free os atributos que foram alocados dinamicamente 
     data->combustivel = combustivel;
 
     return data;
