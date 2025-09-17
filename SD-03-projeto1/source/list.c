@@ -80,4 +80,18 @@ int list_remove_by_model(struct list_t *list, const char *modelo)
     return 1;    
 }
 
+/* Obtém o primeiro carro que corresponda à marca indicada.
+* Retorna ponteiro para os dados ou NULL se não encontrar ou em caso de erro.
+*/
+struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca){
+    if(!list || !marca) return NULL;
+    struct car_t *car = list->head;
+    while(car){
+        if(car->data && car->data->marca && strcmp(car->data->marca, marca) == 0){
+            return car->data;
+        }
+        car = car->next;
+    }
+    return NULL;
+}
 
