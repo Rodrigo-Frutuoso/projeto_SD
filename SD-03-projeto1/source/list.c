@@ -102,21 +102,60 @@ struct data_t **list_get_by_year(struct list_t *list, int ano)
         if (car->data && car->data->ano == ano) count++;
         car = car->next;
     }
-    struct data_t **arr = malloc((count + 1) * sizeof(struct data_t *));
-    if (!arr) return NULL;
+    struct data_t **carros = malloc((count + 1) * sizeof(struct data_t *));
+    if (!carros) return NULL;
     if (count == 0) {
-        arr[0] = NULL;
-        return arr;
+        carros[0] = NULL;
+        return carros;
     }
     int i = 0;
     car = list->head;
     while (car) {
         if (car->data && car->data->ano == ano) {
-            arr[i++] = car->data;
+            carros[i++] = car->data;
         }
         car = car->next;
     }
-    arr[i] = NULL;
-    return arr;
+    carros[i] = NULL;
+    return carros;
 }
 
+/* Ordena a lista de carros por ano de fabrico (crescente).
+ * Retorna 0 (OK) ou -1 em caso de erro.
+ */
+int list_order_by_year(struct list_t *list){
+
+
+}
+
+/* Retorna o número de carros na lista ou -1 em caso de erro.
+ */
+int list_size(struct list_t *list) {
+    if (!list) return -1;
+    return list->size;
+}
+
+
+/* Constrói um array de strings com os modelos dos carros na lista.
+ * O último elemento do array é NULL.
+ * Retorna o array ou NULL em caso de erro.
+ */
+char **list_get_model_list(struct list_t *list){
+
+
+}
+
+/* Liberta a memória ocupada pelo array de modelos.
+ * Retorna 0 (OK) ou -1 em caso de erro.
+ */
+int list_free_model_list(char **models)
+{
+    if (!models) return -1;
+    char **p = models;
+    while (*p) {
+        free(*p);
+        p++;
+    }
+    free(models);
+    return 0;
+}
