@@ -92,7 +92,6 @@ struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca){
     return NULL;
 }
 
-
 struct data_t **list_get_by_year(struct list_t *list, int ano)
 {
     if (!list) return NULL;
@@ -128,34 +127,36 @@ int list_order_by_year(struct list_t *list){
 
 }
 
-/* Retorna o número de carros na lista ou -1 em caso de erro.
- */
 int list_size(struct list_t *list) {
     if (!list) return -1;
     return list->size;
 }
 
-
-/* Constrói um array de strings com os modelos dos carros na lista.
- * O último elemento do array é NULL.
- * Retorna o array ou NULL em caso de erro.
- */
 char **list_get_model_list(struct list_t *list){
-
-
+    if (!list) return NULL;
+    char **modelos = malloc((list->size + 1) * sizeof(char *));
+    if (!modelos) return NULL;
+    struct car_t *car = list->head;
+    int i = 0;
+    while (car) {
+        if (car->data && car->data->modelo) {
+            modelos[i] = strdup(car->data->modelo);
+            i++;
+        }
+        car = car->next;
+    }
+    modelos[i] = NULL;
+    return modelos;
 }
 
-/* Liberta a memória ocupada pelo array de modelos.
- * Retorna 0 (OK) ou -1 em caso de erro.
- */
-int list_free_model_list(char **models)
+int list_free_model_list(char **modelos)
 {
-    if (!models) return -1;
-    char **p = models;
-    while (*p) {
-        free(*p);
-        p++;
+    if (!modelos) return -1;
+    char **m = modelos;
+    while (*m) {
+        free(*m);
+        m++;
     }
-    free(models);
+    free(modelos);
     return 0;
 }
