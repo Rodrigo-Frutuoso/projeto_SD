@@ -80,11 +80,12 @@ int list_remove_by_model(struct list_t *list, const char *modelo)
     return 1;    
 }
 
-struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca){
-    if(!list || !marca) return NULL;
+struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca)
+{
+    if(!list) return NULL;
     struct car_t *car = list->head;
     while(car){
-        if(car->data && car->data->marca && (car->data->marca = marca)){
+        if(car->data && car->data->marca == marca){
             return car->data;
         }
         car = car->next;
@@ -122,17 +123,41 @@ struct data_t **list_get_by_year(struct list_t *list, int ano)
 /* Ordena a lista de carros por ano de fabrico (crescente).
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
-int list_order_by_year(struct list_t *list){
+int list_order_by_year(struct list_t *list)
+{ 
+    if (!list || !list->head) return -1;
+    int swapped;
+    struct car_t *ptr1;
+    struct car_t *lptr = NULL;
 
+    do {
+        swapped = 0;
+        ptr1 = list->head;
 
+        while (ptr1->next != lptr) {
+            if (ptr1->data && ptr1->next->data && ptr1->data->ano > ptr1->next->data->ano) {
+                // Swap data pointers
+                struct data_t *temp = ptr1->data;
+                ptr1->data = ptr1->next->data;
+                ptr1->next->data = temp;
+                swapped = 1;
+            }
+            ptr1 = ptr1->next;
+        }
+        lptr = ptr1;
+    } while (swapped);
+
+    return 0;
 }
 
-int list_size(struct list_t *list) {
+int list_size(struct list_t *list)
+{
     if (!list) return -1;
     return list->size;
 }
 
-char **list_get_model_list(struct list_t *list){
+char **list_get_model_list(struct list_t *list)
+{
     if (!list) return NULL;
     char **modelos = malloc((list->size + 1) * sizeof(char *));
     if (!modelos) return NULL;
