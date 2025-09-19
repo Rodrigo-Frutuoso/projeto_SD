@@ -17,7 +17,7 @@
 struct list_t *list_create()
 {
     struct list_t *list = malloc(sizeof(struct list_t));
-    if (!list) return NULL;
+    if (list == NULL) return NULL;
     list->size = 0;
     list->head = NULL;
     return list;
@@ -25,7 +25,7 @@ struct list_t *list_create()
 
 int list_destroy(struct list_t *list)
 {
-    if (!list) return -1;
+    if (list == NULL) return -1;
     struct car_t *car = list->head;
     while(car){
         struct car_t *next_car = car->next;
@@ -41,9 +41,9 @@ int list_destroy(struct list_t *list)
 
 int list_add(struct list_t *list, struct data_t *car)
 {
-    if(!list || !car) return -1;
+    if(list == NULL || car == NULL) return -1;
     struct car_t *car_added = malloc(sizeof(struct car_t));
-    if(!car_added) return -1;
+    if(car_added == NULL) return -1;
     car_added->data = car;
     car_added->next = NULL;
     if(list->head == NULL){
@@ -61,7 +61,7 @@ int list_add(struct list_t *list, struct data_t *car)
 
 int list_remove_by_model(struct list_t *list, const char *modelo)
 {
-    if(!list || !modelo) return -1;
+    if(list == NULL || modelo == NULL) return -1;
     struct car_t *car = list->head;
     struct car_t *car_backup = NULL;
         while (car) {
@@ -82,7 +82,7 @@ int list_remove_by_model(struct list_t *list, const char *modelo)
 
 struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca)
 {
-    if(!list) return NULL;
+    if(list == NULL) return NULL;
     struct car_t *car = list->head;
     while(car){
         if(car->data && car->data->marca == marca){
@@ -95,7 +95,7 @@ struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca)
 
 struct data_t **list_get_by_year(struct list_t *list, int ano)
 {
-    if (!list) return NULL;
+    if (list == NULL) return NULL;
     int count = 0;
     struct car_t *car = list->head;
     while (car) {
@@ -103,7 +103,7 @@ struct data_t **list_get_by_year(struct list_t *list, int ano)
         car = car->next;
     }
     struct data_t **carros = malloc((count + 1) * sizeof(struct data_t *));
-    if (!carros) return NULL;
+    if (carros == NULL) return NULL;
     if (count == 0) {
         carros[0] = NULL;
         return carros;
@@ -125,7 +125,7 @@ struct data_t **list_get_by_year(struct list_t *list, int ano)
  */
 int list_order_by_year(struct list_t *list)
 { 
-    if (!list || !list->head) return -1;
+    if (list == NULL || list->head == NULL) return -1;
     int swapped;
     struct car_t *ptr1;
     struct car_t *lptr = NULL;
@@ -152,15 +152,15 @@ int list_order_by_year(struct list_t *list)
 
 int list_size(struct list_t *list)
 {
-    if (!list) return -1;
+    if (list == NULL) return -1;
     return list->size;
 }
 
 char **list_get_model_list(struct list_t *list)
 {
-    if (!list) return NULL;
+    if (list == NULL) return NULL;
     char **modelos = malloc((list->size + 1) * sizeof(char *));
-    if (!modelos) return NULL;
+    if (modelos == NULL) return NULL;
     struct car_t *car = list->head;
     int i = 0;
     while (car) {
@@ -176,7 +176,7 @@ char **list_get_model_list(struct list_t *list)
 
 int list_free_model_list(char **modelos)
 {
-    if (!modelos) return -1;
+    if (modelos == NULL) return -1;
     char **m = modelos;
     while (*m) {
         free(*m);
