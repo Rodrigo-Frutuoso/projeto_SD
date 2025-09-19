@@ -11,14 +11,14 @@ TEST_DIR = tests
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror
 
-OBJECTS_FILES = data.o list-private.o list.o serialization.o
+OBJECTS_FILES = data.o list.o serialization.o
 OBJECTS = $(addprefix $(OBJ_DIR)/, $(OBJECTS_FILES))
 
 TEST_NAMES = test_data test_list test_serialization
 TEST_BINARIES = $(addprefix $(BIN_DIR)/, $(TEST_NAMES))
 
-all: $(BIN_DIR) $(OBJ_DIR) $(OBJECTS)
-	@$(CC) $(OBJECTS) -o $(BIN_DIR)/SD_projeto1
+
+all: tests
 
 $(BIN_DIR):
 	@mkdir -p $(BIN_DIR)
@@ -27,11 +27,10 @@ $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
 
 clean:
-	@\rm -f $(OBJ_DIR)/*.o
+	@\rm -f $(OBJ_DIR)/* || true
 
 fclean: clean
 	@\rm -f $(BIN_DIR)/* || true
-	@\rm -f $(OBJ_DIR)/* || true
 
 re: fclean all
 
@@ -54,3 +53,4 @@ test: tests
 	echo "All tests passed."
 
 .PHONY: tests test clean fclean re all
+.SECONDARY: $(OBJECTS)

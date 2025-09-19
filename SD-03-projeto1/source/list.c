@@ -11,9 +11,6 @@
 #include "../include/list-private.h"
 #include "../include/data.h"
 
-/* Codigo do Simão */
-
-
 struct list_t *list_create()
 {
     struct list_t *list = malloc(sizeof(struct list_t));
@@ -33,7 +30,7 @@ int list_destroy(struct list_t *list)
             data_destroy(car->data);
         }
         free(car);
-        car = next_car; 
+        car = next_car;
     }
     free(list);
     return 0;
@@ -71,13 +68,13 @@ int list_remove_by_model(struct list_t *list, const char *modelo)
                 data_destroy(car->data);
                 free(car);
                 list->size--;
-                return 0; 
+                return 0;
             }else{
                 car_backup = car;
                 car = car->next;
             }
         }
-    return 1;    
+    return 1;
 }
 
 struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca)
@@ -124,8 +121,9 @@ struct data_t **list_get_by_year(struct list_t *list, int ano)
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int list_order_by_year(struct list_t *list)
-{ 
-    if (list == NULL || list->head == NULL) return -1;
+{
+    if (list == NULL) return -1;
+    if (list->head == NULL || list->head->next == NULL) return 0;
     int swapped;
     struct car_t *ptr1;
     struct car_t *lptr = NULL;
@@ -136,7 +134,6 @@ int list_order_by_year(struct list_t *list)
 
         while (ptr1->next != lptr) {
             if (ptr1->data && ptr1->next->data && ptr1->data->ano > ptr1->next->data->ano) {
-                // Swap data pointers
                 struct data_t *temp = ptr1->data;
                 ptr1->data = ptr1->next->data;
                 ptr1->next->data = temp;
