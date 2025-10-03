@@ -37,12 +37,3 @@ Os executáveis de teste são criados em `binary/`: `test_data`, `test_list`, `t
 Limitações/conhecidas
 - Sem verificação de overflows ao construir buffers de serialização (tamanhos vêm dos dados); confia-se em entradas razoáveis.
 - `list_get_model_list` duplica strings; usar `list_free_model_list` para libertar corretamente.
-
-Packaging
-- Para criar o ZIP final, execute (opcional):
-
-```bash
-zip -r SD-03-projeto1.zip include source Makefile README.md
-```
-
-Certifique-se de não incluir `object/` nem `binary/` no ZIP entregue, conforme regras.
