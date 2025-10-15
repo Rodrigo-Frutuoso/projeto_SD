@@ -6,14 +6,39 @@
  */
 
 #include "message-private.h"
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <unistd.h>
+#include <errno.h>
 
-int write_all(int sock, void *buf, int len) {
-
+int write_all(int sock, void *buf, int len) { //SLIDE 23 TP4. Sockets
+    int bufsize = len;
+    char *ptr = (char *)buf;
+    
+    while (len > 0) {
+        int res = write(sock, ptr, len);
+        if (res < 0) {
+            if (errno == EINTR) continue;
+            return res;
+        }
+        if (res == 0) return res;
+        ptr += res;
+        len -= res;
+    }
+    return bufsize;
 }
 
 int read_all(int sock, void *buf, int len) {
-
+    int bufsize = len;
+    char *ptr = (char *)buf;
+    
+    while (len > 0) {
+        int res = read(sock, ptr, len);
+        if (res < 0) {
+            if (errno == EINTR) continue;
+            return res;
+        }
+        if (res == 0) return res;
+        ptr += res;
+        len -= res;
+    }
+    return bufsize;
 }
