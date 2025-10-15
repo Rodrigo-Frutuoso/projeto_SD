@@ -19,7 +19,7 @@
  * com o servidor. A definir pelo grupo em client_stub-private.h
  */
 
-struct rlist_t; /* Definida em client_stub-private.h */
+struct rlist_t; /* Definida em list-private.h */
 
 /* Função para estabelecer uma associação entre o cliente e o servidor,
  * em que address_port é uma string no formato <hostname>:<port>.
