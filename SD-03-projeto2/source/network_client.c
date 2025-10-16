@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int network_connect(struct rlist_t *rlist) {
+int network_connect(struct rlist_t *rlist) { //SLIDES +11  TP4. Sockets
     if (rlist == NULL || rlist->server_address == NULL) {
         return -1;
     }

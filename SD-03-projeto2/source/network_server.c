@@ -19,7 +19,9 @@
 #include <stdlib.h>
 #include <signal.h>
 
-int network_server_init(short port) {
+static int server_sockfd = -1;
+
+int network_server_init(short port) { //SLIDES +6  TP4. Sockets
     int sockfd;
     struct sockaddr_in server;
 
@@ -49,6 +51,7 @@ int network_server_init(short port) {
 
     signal(SIGPIPE, SIG_IGN);
 
+    server_sockfd = sockfd;
     return sockfd;
 }
 
@@ -154,9 +157,13 @@ int network_server_close(int socket) {
         return -1;
     }
 
+    server_sockfd = -1;
     return 0;
 }
 
 void network_server_request_shutdown(void) {
-    
+    if (server_sockfd >= 0) {
+        close(server_sockfd);
+        server_sockfd = -1;
+    }
 }
