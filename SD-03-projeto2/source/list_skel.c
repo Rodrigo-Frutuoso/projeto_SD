@@ -11,7 +11,11 @@
 #include <stdlib.h>
 
 struct list_t *list_skel_init() {
-
+    struct list_t *list = list_create();
+    if(list == NULL){
+        return NULL;
+    }
+    return list;
 }
 
 int list_skel_destroy(struct list_t *list) {
