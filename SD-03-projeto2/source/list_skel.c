@@ -84,7 +84,6 @@ int invoke(MessageT *msg, struct list_t *list) {
             }
 
             break;
-
         case MESSAGE_T__OPCODE__OP_DEL:
             if (msg->data == NULL || msg->data->modelo == NULL) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
@@ -103,8 +102,18 @@ int invoke(MessageT *msg, struct list_t *list) {
             }
 
             break;
-
         case MESSAGE_T__OPCODE__OP_SIZE:
+
+            int size = list_size(list);
+            if (size >= 0) {
+                msg->opcode += 1;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+                msg->result = size; 
+            } 
+            else {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            }
 
             break;
         case MESSAGE_T__OPCODE__OP_GETMODELS:
