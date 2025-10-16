@@ -7,6 +7,8 @@
 
 #include "list_skel.h"
 #include "list.h"
+#include "data.h"
+#include <string.h>
 #include "sdmessage.pb-c.h"
 #include <stdlib.h>
 
@@ -19,7 +21,13 @@ struct list_t *list_skel_init() {
 }
 
 int list_skel_destroy(struct list_t *list) {
-
+    if(list == NULL){
+        return -1;
+    }
+    if(list_destroy(list) == 0){
+        return 0;
+    }
+    return -1;
 }
 
 int invoke(MessageT *msg, struct list_t *list) {
