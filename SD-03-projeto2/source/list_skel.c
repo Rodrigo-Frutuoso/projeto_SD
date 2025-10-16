@@ -41,9 +41,7 @@ int invoke(MessageT *msg, struct list_t *list) {
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 break;
             }
-            struct data_t *car = data_create(msg->data->ano,
-                msg->data->preco,(enum marca_t)msg->data->marca,
-                msg->data->modelo,(enum combustivel_t)msg->data->combustivel);
+            struct data_t *car = data_create(msg->data->ano, msg->data->preco,(enum marca_t)msg->data->marca,msg->data->modelo,(enumcombustivel_msg->data->combustivel));
             if(car == NULL){
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
@@ -59,13 +57,50 @@ int invoke(MessageT *msg, struct list_t *list) {
             msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
             msg->result = 0;
             break;
-            
+
         case MESSAGE_T__OPCODE__OP_GET:
-
+            if (msg->data == NULL || msg->data->marca) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                break;
+            }
+            struct data_t *car = list_get_by_marca(list, (enum marca_t)msg->data->marca);    
+            msg->opcode += 1;
+            if (car != NULL) {
+                msg->c_type = MESSAGE_T__C_TYPE__CT_DATA;
+                msg->data->ano = car->ano;
+                msg->data->preco = car->preco;
+                msg->data->marca = (Marca)car->marca;
+                msg->data->modelo = strdup(car->modelo);           
+                msg->data->combustivel = (Combustivel)car->combustivel;
+            }
+            else {
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;       
+            }
             break;
+
         case MESSAGE_T__OPCODE__OP_DEL:
-
+            if (msg->data == NULL || msg->data->modelo == NULL) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                break;
+            }
+            msg->opcode += 1;
+            if (list_remove_by_model(list, msg->data->modelo) == 0) {
+                msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+                msg->result = 0;
+            } 
+            else if (list_remove_by_model(list, msg->data->modelo) ==  1) {
+                msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+                msg->result = -1;
+            } 
+            else {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            }
+            
             break;
+
         case MESSAGE_T__OPCODE__OP_SIZE:
 
             break;
