@@ -35,22 +35,53 @@ int invoke(MessageT *msg, struct list_t *list) {
         return -1;
     }
     switch(msg->opcode){
-        case MESSAGE_T__OPCODE__OP_BAD:
-
         case MESSAGE_T__OPCODE__OP_ADD:
-        
+            if (msg->data == NULL) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                break;
+            }
+            struct data_t *car = data_create(msg->data->ano,
+                msg->data->preco,(enum marca_t)msg->data->marca,
+                msg->data->modelo,(enum combustivel_t)msg->data->combustivel);
+            if(car == NULL){
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                break;
+            }
+            if (list_add(list, car) != 0) {
+                data_destroy(car);
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                break;
+            }
+            msg->opcode += 1;
+            msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+            msg->result = 0;
+            break;
+            
         case MESSAGE_T__OPCODE__OP_GET:
 
+            break;
         case MESSAGE_T__OPCODE__OP_DEL:
 
+            break;
         case MESSAGE_T__OPCODE__OP_SIZE:
 
+            break;
         case MESSAGE_T__OPCODE__OP_GETMODELS:
 
+            break;
         case MESSAGE_T__OPCODE__OP_GETLISTBYTEAR:
 
+            break;
         case MESSAGE_T__OPCODE__OP_ORDER:
 
+            break;
+        default:
+            msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+            msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            break;
     }
 
 }
