@@ -31,5 +31,26 @@ int list_skel_destroy(struct list_t *list) {
 }
 
 int invoke(MessageT *msg, struct list_t *list) {
+    if(msg == NULL || list == NULL){
+        return -1;
+    }
+    switch(msg->opcode){
+        case MESSAGE_T__OPCODE__OP_BAD:
+
+        case MESSAGE_T__OPCODE__OP_ADD:
+        
+        case MESSAGE_T__OPCODE__OP_GET:
+
+        case MESSAGE_T__OPCODE__OP_DEL:
+
+        case MESSAGE_T__OPCODE__OP_SIZE:
+
+        case MESSAGE_T__OPCODE__OP_GETMODELS:
+
+        case MESSAGE_T__OPCODE__OP_GETLISTBYTEAR:
+
+        case MESSAGE_T__OPCODE__OP_ORDER:
+
+    }
 
 }
