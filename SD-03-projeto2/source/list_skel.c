@@ -59,13 +59,16 @@ int invoke(MessageT *msg, struct list_t *list) {
             break;
 
         case MESSAGE_T__OPCODE__OP_GET:
-            if (msg->data == NULL || msg->data->marca) {
+
+            if (msg->data == NULL) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 break;
             }
+
             struct data_t *car = list_get_by_marca(list, (enum marca_t)msg->data->marca);    
             msg->opcode += 1;
+
             if (car != NULL) {
                 msg->c_type = MESSAGE_T__C_TYPE__CT_DATA;
                 msg->data->ano = car->ano;
@@ -73,10 +76,13 @@ int invoke(MessageT *msg, struct list_t *list) {
                 msg->data->marca = (Marca)car->marca;
                 msg->data->modelo = strdup(car->modelo);           
                 msg->data->combustivel = (Combustivel)car->combustivel;
+                data_destroy(car);
             }
+
             else {
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;       
             }
+
             break;
 
         case MESSAGE_T__OPCODE__OP_DEL:
@@ -85,20 +91,17 @@ int invoke(MessageT *msg, struct list_t *list) {
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 break;
             }
-            msg->opcode += 1;
-            if (list_remove_by_model(list, msg->data->modelo) == 0) {
-                msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-                msg->result = 0;
+
+            if (list_remove_by_model(list, msg->data->modelo); == 0 ||list_remove_by_model(list, msg->data->modelo); == 1) 
+                msg->opcode += 1;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
             } 
-            else if (list_remove_by_model(list, msg->data->modelo) ==  1) {
-                msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-                msg->result = -1;
-            } 
+
             else {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
             }
-            
+
             break;
 
         case MESSAGE_T__OPCODE__OP_SIZE:
