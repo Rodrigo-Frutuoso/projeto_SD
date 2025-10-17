@@ -165,7 +165,7 @@ int invoke(MessageT *msg, struct list_t *list) {
                     while (models[count] != NULL) count++;
                     
                     msg->opcode += 1;
-                    msg->c_type = MESSAGE_T__C_TYPE__CT_LIST;
+                    msg->c_type = MESSAGE_T__C_TYPE__CT_MODEL;
                     msg->n_models = count;
                     msg->models = malloc(count * sizeof(char*));
                     
