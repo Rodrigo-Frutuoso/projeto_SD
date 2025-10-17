@@ -9,44 +9,302 @@
 #include "client_stub-private.h"
 #include "network_client.h"
 #include "data.h"
+#include "sdmessage.pb-c.h"
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 struct rlist_t *rlist_connect(char *address_port) {
+    if (address_port == NULL) {
+        return NULL;
+    }
 
+    char *colon = strchr(address_port, ':');
+    if (colon == NULL) {
+        return NULL;
+    }
+
+    struct rlist_t *rlist = malloc(sizeof(struct rlist_t));
+    if (rlist == NULL) {
+        return NULL;
+    }
+
+    size_t addr_len = colon - address_port;
+    rlist->server_address = malloc(addr_len + 1);
+    if (rlist->server_address == NULL) {
+        free(rlist);
+        return NULL;
+    }
+
+    strncpy(rlist->server_address, address_port, addr_len);
+    rlist->server_address[addr_len] = '\0';
+
+    rlist->server_port = atoi(colon + 1);
+    if (rlist->server_port <= 0) {
+        free(rlist->server_address);
+        free(rlist);
+        return NULL;
+    }
+
+    rlist->sockfd = -1;
+
+    if (network_connect(rlist) < 0) {
+        free(rlist->server_address);
+        free(rlist);
+        return NULL;
+    }
+
+    return rlist;
 }
 
 int rlist_disconnect(struct rlist_t *rlist) {
+    if (rlist == NULL) {
+        return -1;
+    }
 
+    if (network_close(rlist) < 0) {
+        return -1;
+    }
+
+    free(rlist->server_address);
+    free(rlist);
+    return 0;
 }
 
 int rlist_add(struct rlist_t *rlist, struct data_t *car) {
+    if (rlist == NULL || car == NULL) {
+        return -1;
+    }
 
+    MessageT msg = MESSAGE_T__INIT;
+    msg.opcode = MESSAGE_T__OPCODE__OP_ADD;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_DATA;
+
+    Data data = DATA__INIT;
+    data.ano = car->ano;
+    data.preco = car->preco;
+    data.marca = car->marca;
+    data.modelo = car->modelo;
+    data.combustivel = car->combustivel;
+    msg.data = &data;
+
+    MessageT *response = network_send_receive(rlist, &msg);
+    if (response == NULL) {
+        return -1;
+    }
+
+    int result = -1;
+    if (response->opcode == MESSAGE_T__OPCODE__OP_ADD + 1 && 
+        response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {
+        result = 0;
+    }
+
+    message_t__free_unpacked(response, NULL);
+    return result;
 }
 
 int rlist_remove_by_model(struct rlist_t *rlist, const char *modelo) {
+    if (rlist == NULL || modelo == NULL) {
+        return -1;
+    }
 
+    MessageT msg = MESSAGE_T__INIT;
+    msg.opcode = MESSAGE_T__OPCODE__OP_DEL;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_MODEL;
+    msg.n_models = 1;
+    msg.models = (char **)&modelo;
+
+    MessageT *response = network_send_receive(rlist, &msg);
+    if (response == NULL) {
+        return -1;
+    }
+
+    int result = -1;
+    if (response->opcode == MESSAGE_T__OPCODE__OP_DEL + 1) {
+        if (response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {
+            result = 0;
+        } else if (response->c_type == MESSAGE_T__C_TYPE__CT_RESULT) {
+            result = response->result;
+        }
+    }
+
+    message_t__free_unpacked(response, NULL);
+    return result;
 }
 
 struct data_t *rlist_get_by_marca(struct rlist_t *rlist, enum marca_t marca) {
+    if (rlist == NULL) {
+        return NULL;
+    }
 
+    MessageT msg = MESSAGE_T__INIT;
+    msg.opcode = MESSAGE_T__OPCODE__OP_GET;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_MARCA;
+    msg.result = marca;
+
+    MessageT *response = network_send_receive(rlist, &msg);
+    if (response == NULL) {
+        return NULL;
+    }
+
+    struct data_t *car = NULL;
+    if (response->opcode == MESSAGE_T__OPCODE__OP_GET + 1 && 
+        response->c_type == MESSAGE_T__C_TYPE__CT_DATA &&
+        response->data != NULL) {
+        car = data_create(response->data->ano, response->data->preco,
+                         response->data->marca, response->data->modelo,
+                         response->data->combustivel);
+    }
+
+    message_t__free_unpacked(response, NULL);
+    return car;
 }
 
 struct data_t **rlist_get_by_year(struct rlist_t *rlist, int ano) {
+    if (rlist == NULL) {
+        return NULL;
+    }
 
+    MessageT msg = MESSAGE_T__INIT;
+    msg.opcode = MESSAGE_T__OPCODE__OP_GET;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_YEAR;
+    msg.result = ano;
+
+    MessageT *response = network_send_receive(rlist, &msg);
+    if (response == NULL) {
+        return NULL;
+    }
+
+    struct data_t **cars = NULL;
+    if (response->opcode == MESSAGE_T__OPCODE__OP_GET + 1 && 
+        response->c_type == MESSAGE_T__C_TYPE__CT_LIST) {
+        cars = malloc((response->n_cars + 1) * sizeof(struct data_t *));
+        if (cars != NULL) {
+            size_t i;
+            for (i = 0; i < response->n_cars; i++) {
+                cars[i] = data_create(response->cars[i]->ano,
+                                     response->cars[i]->preco,
+                                     response->cars[i]->marca,
+                                     response->cars[i]->modelo,
+                                     response->cars[i]->combustivel);
+                if (cars[i] == NULL) {
+                    while (i > 0) {
+                        data_destroy(cars[--i]);
+                    }
+                    free(cars);
+                    cars = NULL;
+                    break;
+                }
+            }
+            if (cars != NULL) {
+                cars[response->n_cars] = NULL;
+            }
+        }
+    }
+
+    message_t__free_unpacked(response, NULL);
+    return cars;
 }
 
 int rlist_order_by_year(struct rlist_t *rlist) {
+    if (rlist == NULL) {
+        return -1;
+    }
 
+    MessageT msg = MESSAGE_T__INIT;
+    msg.opcode = MESSAGE_T__OPCODE__OP_ORDER;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
+
+    MessageT *response = network_send_receive(rlist, &msg);
+    if (response == NULL) {
+        return -1;
+    }
+
+    int result = -1;
+    if (response->opcode == MESSAGE_T__OPCODE__OP_ORDER + 1 && 
+        response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {
+        result = 0;
+    }
+
+    message_t__free_unpacked(response, NULL);
+    return result;
 }
 
 int rlist_size(struct rlist_t *rlist) {
+    if (rlist == NULL) {
+        return -1;
+    }
 
+    MessageT msg = MESSAGE_T__INIT;
+    msg.opcode = MESSAGE_T__OPCODE__OP_SIZE;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
+
+    MessageT *response = network_send_receive(rlist, &msg);
+    if (response == NULL) {
+        return -1;
+    }
+
+    int result = -1;
+    if (response->opcode == MESSAGE_T__OPCODE__OP_SIZE + 1 && 
+        response->c_type == MESSAGE_T__C_TYPE__CT_RESULT) {
+        result = response->result;
+    }
+
+    message_t__free_unpacked(response, NULL);
+    return result;
 }
 
 char **rlist_get_model_list(struct rlist_t *rlist) {
+    if (rlist == NULL) {
+        return NULL;
+    }
 
+    MessageT msg = MESSAGE_T__INIT;
+    msg.opcode = MESSAGE_T__OPCODE__OP_GETMODELS;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
+
+    MessageT *response = network_send_receive(rlist, &msg);
+    if (response == NULL) {
+        return NULL;
+    }
+
+    char **models = NULL;
+    if (response->opcode == MESSAGE_T__OPCODE__OP_GETMODELS + 1 && 
+        response->c_type == MESSAGE_T__C_TYPE__CT_MODEL) {
+        models = malloc((response->n_models + 1) * sizeof(char *));
+        if (models != NULL) {
+            size_t i;
+            for (i = 0; i < response->n_models; i++) {
+                models[i] = strdup(response->models[i]);
+                if (models[i] == NULL) {
+                    while (i > 0) {
+                        free(models[--i]);
+                    }
+                    free(models);
+                    models = NULL;
+                    break;
+                }
+            }
+            if (models != NULL) {
+                models[response->n_models] = NULL;
+            }
+        }
+    }
+
+    message_t__free_unpacked(response, NULL);
+    return models;
 }
 
 int rlist_free_model_list(char **models) {
+    if (models == NULL) {
+        return -1;
+    }
+
+    for (int i = 0; models[i] != NULL; i++) {
+        free(models[i]);
+    }
+    free(models);
+    return 0;
+}
 
 }
