@@ -306,5 +306,3 @@ int rlist_free_model_list(char **models) {
     free(models);
     return 0;
 }
-
-}
