@@ -58,11 +58,7 @@ struct rlist_t *rlist_connect(char *address_port) {
 }
 
 int rlist_disconnect(struct rlist_t *rlist) {
-    if (rlist == NULL) {
-        return -1;
-    }
-
-    if (network_close(rlist) < 0) {
+    if (rlist == NULL || network_close(rlist) < 0) {
         return -1;
     }
 
@@ -93,11 +89,8 @@ int rlist_add(struct rlist_t *rlist, struct data_t *car) {
         return -1;
     }
 
-    int result = -1;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_ADD + 1 && 
-        response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {
-        result = 0;
-    }
+    int result = (response->opcode == MESSAGE_T__OPCODE__OP_ADD + 1 && 
+                  response->c_type == MESSAGE_T__C_TYPE__CT_NONE) ? 0 : -1;
 
     message_t__free_unpacked(response, NULL);
     return result;
@@ -220,11 +213,8 @@ int rlist_order_by_year(struct rlist_t *rlist) {
         return -1;
     }
 
-    int result = -1;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_ORDER + 1 && 
-        response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {
-        result = 0;
-    }
+    int result = (response->opcode == MESSAGE_T__OPCODE__OP_ORDER + 1 && 
+                  response->c_type == MESSAGE_T__C_TYPE__CT_NONE) ? 0 : -1;
 
     message_t__free_unpacked(response, NULL);
     return result;
@@ -244,11 +234,9 @@ int rlist_size(struct rlist_t *rlist) {
         return -1;
     }
 
-    int result = -1;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_SIZE + 1 && 
-        response->c_type == MESSAGE_T__C_TYPE__CT_RESULT) {
-        result = response->result;
-    }
+    int result = (response->opcode == MESSAGE_T__OPCODE__OP_SIZE + 1 && 
+                  response->c_type == MESSAGE_T__C_TYPE__CT_RESULT) 
+                  ? response->result : -1;
 
     message_t__free_unpacked(response, NULL);
     return result;
