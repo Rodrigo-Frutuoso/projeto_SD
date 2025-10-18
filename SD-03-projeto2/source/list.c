@@ -182,3 +182,38 @@ int list_free_model_list(char **modelos)
     free(modelos);
     return 0;
 }
+
+/* Devolve um array de ponteiros (terminado em NULL) para TODOS os carros.
+ * Cada elemento do array aponta para dados internos da lista (não duplicados).
+ * Cabe a quem chama libertar APENAS o array (free(result)), nunca os data_t*.
+ * Retorna NULL em caso de erro.
+ */
+struct data_t **list_get_all(struct list_t *list)
+{
+    if (list == NULL) return NULL;
+
+    // Aloca array com espaço para todos os carros + NULL no final
+    struct data_t **carros = malloc((list->size + 1) * sizeof(struct data_t *));
+    if (carros == NULL) return NULL;
+
+    // Se a lista está vazia, retorna array com apenas NULL
+    if (list->size == 0) {
+        carros[0] = NULL;
+        return carros;
+    }
+
+    // Percorre a lista e preenche o array com ponteiros para os dados
+    int i = 0;
+    struct car_t *car = list->head;
+    while (car) {
+        if (car->data) {
+            carros[i++] = car->data;
+        }
+        car = car->next;
+    }
+
+    // Termina o array com NULL
+    carros[i] = NULL;
+
+    return carros;
+}

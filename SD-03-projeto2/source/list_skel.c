@@ -66,10 +66,10 @@ int invoke(MessageT *msg, struct list_t *list) {
                     msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                     break;
                 }
-                
+
                 if (msg->c_type == MESSAGE_T__C_TYPE__CT_MARCA) {
-                
-                    struct data_t *car = list_get_by_marca(list, (enum marca_t)msg->data->marca);    
+
+                    struct data_t *car = list_get_by_marca(list, (enum marca_t)msg->data->marca);
                     msg->opcode += 1;
 
                     if (car != NULL) {
@@ -77,26 +77,26 @@ int invoke(MessageT *msg, struct list_t *list) {
                         msg->data->ano = car->ano;
                         msg->data->preco = car->preco;
                         msg->data->marca = (Marca)car->marca;
-                        msg->data->modelo = strdup(car->modelo);           
+                        msg->data->modelo = strdup(car->modelo);
                         msg->data->combustivel = (Combustivel)car->combustivel;
                     } else {
-                        msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;       
+                        msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                     }
                 }
                 else if (msg->c_type == MESSAGE_T__C_TYPE__CT_YEAR) {
-            
+
                     int ano = msg->data->ano;
                     struct data_t **cars = list_get_by_year(list, ano);
-                    
+
                     if (cars != NULL) {
                         int count = 0;
                         while (cars[count] != NULL) count++;
-                        
+
                         msg->opcode += 1;
                         msg->c_type = MESSAGE_T__C_TYPE__CT_LIST;
                         msg->n_cars = count;
                         msg->cars = malloc(count * sizeof(Data*));
-                        
+
                         if (msg->cars != NULL) {
                             for (int i = 0; i < count; i++) {
                                 msg->cars[i] = malloc(sizeof(Data));
@@ -108,7 +108,7 @@ int invoke(MessageT *msg, struct list_t *list) {
                                     msg->cars[i]->modelo = strdup(cars[i]->modelo);
                                     msg->cars[i]->combustivel = (Combustivel)cars[i]->combustivel;
                                 }
-                            }          
+                            }
                         }
                         free(cars);
                     } else {
@@ -147,8 +147,8 @@ int invoke(MessageT *msg, struct list_t *list) {
             if (size >= 0) {
                 msg->opcode += 1;
                 msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-                msg->result = size; 
-            } 
+                msg->result = size;
+            }
             else {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
@@ -159,16 +159,16 @@ int invoke(MessageT *msg, struct list_t *list) {
         case MESSAGE_T__OPCODE__OP_GETMODELS:
             {
                 char **models = list_get_model_list(list);
-                
+
                 if (models != NULL) {
                     int count = 0;
                     while (models[count] != NULL) count++;
-                    
+
                     msg->opcode += 1;
                     msg->c_type = MESSAGE_T__C_TYPE__CT_MODEL;
                     msg->n_models = count;
                     msg->models = malloc(count * sizeof(char*));
-                    
+
                     if (msg->models != NULL) {
                         for (int i = 0; i < count; i++) {
                             msg->models[i] = strdup(models[i]);
@@ -189,18 +189,18 @@ int invoke(MessageT *msg, struct list_t *list) {
                     msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                     break;
                 }
-                
+
                 struct data_t **all_cars = list_get_all(list);
-                
+
                 if (all_cars != NULL) {
                     int count = 0;
                     while (all_cars[count] != NULL) count++;
-                    
+
                     msg->opcode += 1;
                     msg->c_type = MESSAGE_T__C_TYPE__CT_LIST;
                     msg->n_cars = count;
                     msg->cars = malloc(count * sizeof(Data*));
-                    
+
                     if (msg->cars != NULL) {
                         for (int i = 0; i < count; i++) {
                             msg->cars[i] = malloc(sizeof(Data));
@@ -228,4 +228,5 @@ int invoke(MessageT *msg, struct list_t *list) {
             break;
     }
 
+    return 0;
 }
