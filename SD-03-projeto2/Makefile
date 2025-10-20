@@ -12,11 +12,15 @@ OBJDIR = object
 LIBDIR = lib
 BINDIR = binary
 
+PROVIDED_OBJS = $(OBJDIR)/data.o $(OBJDIR)/list.o
+
 LIB = $(LIBDIR)/liblist.a
-LIB_OBJS = $(OBJDIR)/data.o $(OBJDIR)/list.o
+LIB_OBJS = $(PROVIDED_OBJS)
 COMMON_OBJS = $(OBJDIR)/message-private.o $(OBJDIR)/sdmessage.pb-c.o
 SERVER_OBJS = $(OBJDIR)/list_server.o $(OBJDIR)/network_server.o $(OBJDIR)/list_skel.o
 CLIENT_OBJS = $(OBJDIR)/list_client.o $(OBJDIR)/network_client.o $(OBJDIR)/client_stub.o
+
+GENERATED_OBJS = $(COMMON_OBJS) $(SERVER_OBJS) $(CLIENT_OBJS)
 
 .SILENT:
 
@@ -48,7 +52,9 @@ $(OBJDIR) $(LIBDIR) $(BINDIR):
 	@mkdir -p $@
 
 clean:
-	@rm -rf $(OBJDIR) $(LIBDIR) $(BINDIR)
+	@rm -f $(GENERATED_OBJS)
+	@rm -rf $(LIBDIR) $(BINDIR)
 	@echo "🧹 Limpeza concluída!"
+# manter data.o e list.o
 
 .PHONY: all liblist list_server list_client clean
