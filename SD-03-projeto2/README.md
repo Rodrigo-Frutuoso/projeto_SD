@@ -33,9 +33,16 @@ Este projeto implementa um sistema cliente-servidor usando Protocol Buffers:
 
 ## Como compilar e executar
 
+- copiar sdmessage.proto para diretório do projeto
+
 ```bash
-make clean
-make all
+protoc-c --c_out=. sdmessage.proto
+```
+
+- arrumar sdmessage.pb-c.[c/h] no source e include respetivamente.
+
+```bash
+make
 ```
 
 Servidor:
