@@ -14,34 +14,42 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netdb.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 int network_connect(struct rlist_t *rlist) { //SLIDES +11  TP4. Sockets
     if (rlist == NULL || rlist->server_address == NULL) {
         return -1;
     }
 
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    char port_str[10];
+    snprintf(port_str, sizeof(port_str), "%d", rlist->server_port);
+
+    struct addrinfo hints, *result;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if (getaddrinfo(rlist->server_address, port_str, &hints, &result) != 0) {
+        return -1;
+    }
+
+    int sockfd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (sockfd < 0) {
+        freeaddrinfo(result);
         return -1;
     }
 
-    struct sockaddr_in server;
-    server.sin_family = AF_INET;
-    server.sin_port = htons(rlist->server_port);
-    
-    if (inet_pton(AF_INET, rlist->server_address, &server.sin_addr) < 1) {
+    if (connect(sockfd, result->ai_addr, result->ai_addrlen) < 0) {
         close(sockfd);
+        freeaddrinfo(result);
         return -1;
     }
 
-    if (connect(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        close(sockfd);
-        return -1;
-    }
-
+    freeaddrinfo(result);
     rlist->sockfd = sockfd;
     return 0;
 }

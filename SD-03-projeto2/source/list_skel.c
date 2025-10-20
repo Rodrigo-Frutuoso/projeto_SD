@@ -61,31 +61,31 @@ int invoke(MessageT *msg, struct list_t *list) {
 
         case MESSAGE_T__OPCODE__OP_GET:
             {
-                if (msg->data == NULL) {
-                    msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
-                    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
-                    break;
-                }
-
                 if (msg->c_type == MESSAGE_T__C_TYPE__CT_MARCA) {
-
-                    struct data_t *car = list_get_by_marca(list, (enum marca_t)msg->data->marca);
+                    // Cliente envia marca no campo result
+                    struct data_t *car = list_get_by_marca(list, (enum marca_t)msg->result);
                     msg->opcode += 1;
 
                     if (car != NULL) {
                         msg->c_type = MESSAGE_T__C_TYPE__CT_DATA;
-                        msg->data->ano = car->ano;
-                        msg->data->preco = car->preco;
-                        msg->data->marca = (Marca)car->marca;
-                        msg->data->modelo = strdup(car->modelo);
-                        msg->data->combustivel = (Combustivel)car->combustivel;
+                        // Criar nova estrutura Data para a resposta
+                        msg->data = malloc(sizeof(Data));
+                        if (msg->data != NULL) {
+                            data__init(msg->data);
+                            msg->data->ano = car->ano;
+                            msg->data->preco = car->preco;
+                            msg->data->marca = (Marca)car->marca;
+                            msg->data->modelo = strdup(car->modelo);
+                            msg->data->combustivel = (Combustivel)car->combustivel;
+                        }
                     } else {
                         msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                        msg->data = NULL;
                     }
                 }
                 else if (msg->c_type == MESSAGE_T__C_TYPE__CT_YEAR) {
-
-                    int ano = msg->data->ano;
+                    // Cliente envia ano no campo result
+                    int ano = msg->result;
                     struct data_t **cars = list_get_by_year(list, ano);
 
                     if (cars != NULL) {
@@ -125,17 +125,24 @@ int invoke(MessageT *msg, struct list_t *list) {
 
         case MESSAGE_T__OPCODE__OP_DEL:
             {
-                if (msg->data == NULL || msg->data->modelo == NULL) {
+                // Cliente envia modelo no campo models
+                if (msg->n_models == 0 || msg->models == NULL || msg->models[0] == NULL) {
                     msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                     msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                     break;
                 }
 
-                int res = list_remove_by_model(list, msg->data->modelo);
-                if (res == 0 || res == 1) {
+                int res = list_remove_by_model(list, msg->models[0]);
+                if (res == 0) {
+                    // Removeu com sucesso
                     msg->opcode += 1;
                     msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                } else if (res == 1) {
+                    // Não encontrou - retornar erro
+                    msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 } else {
+                    // Erro genérico
                     msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                     msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 }

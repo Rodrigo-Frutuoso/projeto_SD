@@ -1,0 +1,102 @@
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> Número de carros na lista: 0
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> Carro adicionado com sucesso.
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> Carro adicionado com sucesso.
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> Carro adicionado com sucesso.
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> Número de carros na lista: 3
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> 1. Corolla
+2. X5
+3. A4
+Total: 3 modelo(s).
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> Carro não encontrado.
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> Erro ao obter carros.
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> Erro ao ordenar lista.
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> Erro ao remover carro.
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> Número de carros na lista: 3
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.
+Conectando ao servidor localhost:12345...
+✓ Conectado com sucesso!
+Digite 'help' para ver os comandos disponíveis.
+
+>>> 1. Corolla
+2. X5
+3. A4
+Total: 3 modelo(s).
+>>> A desconectar...
+✓ Desconectado com sucesso.
+Cliente terminado.

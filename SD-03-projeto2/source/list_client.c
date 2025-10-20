@@ -105,8 +105,10 @@ static void cmd_add(struct rlist_t *rlist, char *line) {
         printf("Carro adicionado com sucesso.\n");
     } else {
         printf("Erro ao adicionar carro.\n");
-        data_destroy(car);
     }
+
+    // Libertar memória local (servidor já recebeu cópia dos dados)
+    data_destroy(car);
 }
 
 /**
@@ -125,10 +127,8 @@ static void cmd_remove(struct rlist_t *rlist, char *line) {
     int result = rlist_remove_by_model(rlist, modelo);
     if (result == 0) {
         printf("Carro removido com sucesso.\n");
-    } else if (result == 1) {
-        printf("Carro não encontrado.\n");
     } else {
-        printf("Erro ao remover carro.\n");
+        printf("Carro não encontrado.\n");
     }
 }
 
@@ -197,7 +197,30 @@ static void cmd_get_by_year(struct rlist_t *rlist, char *line) {
  */
 static void cmd_get_list_ordered_by_year(struct rlist_t *rlist) {
     if (rlist_order_by_year(rlist) == 0) {
-        printf("Lista ordenada com sucesso por ano.\n");
+        printf("\nModelos ordenados por ano:\n");
+        printf("---------------------------\n");
+
+        char **models = rlist_get_model_list(rlist);
+
+        if (models == NULL) {
+            printf("Erro ao obter lista de modelos.\n");
+            return;
+        }
+
+        int count = 0;
+        while (models[count] != NULL) {
+            printf("%d. %s\n", count + 1, models[count]);
+            count++;
+        }
+
+        if (count == 0) {
+            printf("Lista vazia.\n");
+        } else {
+            printf("---------------------------\n");
+            printf("Total: %d modelo(s) ordenado(s).\n", count);
+        }
+
+        rlist_free_model_list(models);
     } else {
         printf("Erro ao ordenar lista.\n");
     }

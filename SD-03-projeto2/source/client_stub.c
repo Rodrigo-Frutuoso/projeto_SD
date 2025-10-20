@@ -89,7 +89,7 @@ int rlist_add(struct rlist_t *rlist, struct data_t *car) {
         return -1;
     }
 
-    int result = (response->opcode == MESSAGE_T__OPCODE__OP_ADD + 1 && 
+    int result = (response->opcode == MESSAGE_T__OPCODE__OP_ADD + 1 &&
                   response->c_type == MESSAGE_T__C_TYPE__CT_NONE) ? 0 : -1;
 
     message_t__free_unpacked(response, NULL);
@@ -141,7 +141,7 @@ struct data_t *rlist_get_by_marca(struct rlist_t *rlist, enum marca_t marca) {
     }
 
     struct data_t *car = NULL;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_GET + 1 && 
+    if (response->opcode == MESSAGE_T__OPCODE__OP_GET + 1 &&
         response->c_type == MESSAGE_T__C_TYPE__CT_DATA &&
         response->data != NULL) {
         car = data_create(response->data->ano, response->data->preco,
@@ -169,7 +169,7 @@ struct data_t **rlist_get_by_year(struct rlist_t *rlist, int ano) {
     }
 
     struct data_t **cars = NULL;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_GET + 1 && 
+    if (response->opcode == MESSAGE_T__OPCODE__OP_GET + 1 &&
         response->c_type == MESSAGE_T__C_TYPE__CT_LIST) {
         cars = malloc((response->n_cars + 1) * sizeof(struct data_t *));
         if (cars != NULL) {
@@ -205,7 +205,7 @@ int rlist_order_by_year(struct rlist_t *rlist) {
     }
 
     MessageT msg = MESSAGE_T__INIT;
-    msg.opcode = MESSAGE_T__OPCODE__OP_ORDER;
+    msg.opcode = MESSAGE_T__OPCODE__OP_GETLISTBYTEAR;
     msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
 
     MessageT *response = network_send_receive(rlist, &msg);
@@ -213,8 +213,8 @@ int rlist_order_by_year(struct rlist_t *rlist) {
         return -1;
     }
 
-    int result = (response->opcode == MESSAGE_T__OPCODE__OP_ORDER + 1 && 
-                  response->c_type == MESSAGE_T__C_TYPE__CT_NONE) ? 0 : -1;
+    int result = (response->opcode == MESSAGE_T__OPCODE__OP_GETLISTBYTEAR + 1 &&
+                  response->c_type == MESSAGE_T__C_TYPE__CT_LIST) ? 0 : -1;
 
     message_t__free_unpacked(response, NULL);
     return result;
@@ -234,8 +234,8 @@ int rlist_size(struct rlist_t *rlist) {
         return -1;
     }
 
-    int result = (response->opcode == MESSAGE_T__OPCODE__OP_SIZE + 1 && 
-                  response->c_type == MESSAGE_T__C_TYPE__CT_RESULT) 
+    int result = (response->opcode == MESSAGE_T__OPCODE__OP_SIZE + 1 &&
+                  response->c_type == MESSAGE_T__C_TYPE__CT_RESULT)
                   ? response->result : -1;
 
     message_t__free_unpacked(response, NULL);
@@ -257,7 +257,7 @@ char **rlist_get_model_list(struct rlist_t *rlist) {
     }
 
     char **models = NULL;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_GETMODELS + 1 && 
+    if (response->opcode == MESSAGE_T__OPCODE__OP_GETMODELS + 1 &&
         response->c_type == MESSAGE_T__C_TYPE__CT_MODEL) {
         models = malloc((response->n_models + 1) * sizeof(char *));
         if (models != NULL) {

@@ -9,8 +9,8 @@
 
 # Compilador e flags
 CC = gcc
-CFLAGS = -Wall -Wextra -g -Iinclude -I/opt/homebrew/include
-LDFLAGS = -L/opt/homebrew/lib -lprotobuf-c
+CFLAGS = -Wall -Wextra -g -Iinclude
+LDFLAGS = -lprotobuf-c
 
 # Diretorias
 INCLUDE_DIR = include

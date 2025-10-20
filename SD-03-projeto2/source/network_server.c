@@ -65,24 +65,27 @@ int network_main_loop(int listening_socket, struct list_t *list) {
     int connsockfd;
 
     while ((connsockfd = accept(listening_socket, (struct sockaddr *)&client, &size_client)) != -1) {
-        MessageT *msg = network_receive(connsockfd);
-        if (msg == NULL) {
-            close(connsockfd);
-            continue;
-        }
+        // Loop para processar múltiplas mensagens do mesmo cliente
+        while (1) {
+            MessageT *msg = network_receive(connsockfd);
+            if (msg == NULL) {
+                // Cliente desconectou ou erro na leitura
+                break;
+            }
 
-        if (invoke(msg, list) < 0) {
-            msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
-            msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
-        }
+            if (invoke(msg, list) < 0) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            }
 
-        if (network_send(connsockfd, msg) < 0) {
+            if (network_send(connsockfd, msg) < 0) {
+                message_t__free_unpacked(msg, NULL);
+                break;
+            }
+
             message_t__free_unpacked(msg, NULL);
-            close(connsockfd);
-            continue;
         }
 
-        message_t__free_unpacked(msg, NULL);
         close(connsockfd);
     }
 
