@@ -79,9 +79,9 @@ int rlist_add(struct rlist_t *rlist, struct data_t *car) {
     Data data = DATA__INIT;
     data.ano = car->ano;
     data.preco = car->preco;
-    data.marca = car->marca;
+    data.marca = (Marca)car->marca;
     data.modelo = car->modelo;
-    data.combustivel = car->combustivel;
+    data.combustivel = (Combustivel)car->combustivel;
     msg.data = &data;
 
     MessageT *response = network_send_receive(rlist, &msg);
@@ -145,8 +145,8 @@ struct data_t *rlist_get_by_marca(struct rlist_t *rlist, enum marca_t marca) {
         response->c_type == MESSAGE_T__C_TYPE__CT_DATA &&
         response->data != NULL) {
         car = data_create(response->data->ano, response->data->preco,
-                         response->data->marca, response->data->modelo,
-                         response->data->combustivel);
+                         (enum marca_t)response->data->marca, response->data->modelo,
+                         (enum combustivel_t)response->data->combustivel);
     }
 
     message_t__free_unpacked(response, NULL);
@@ -177,9 +177,9 @@ struct data_t **rlist_get_by_year(struct rlist_t *rlist, int ano) {
             for (i = 0; i < response->n_cars; i++) {
                 cars[i] = data_create(response->cars[i]->ano,
                                      response->cars[i]->preco,
-                                     response->cars[i]->marca,
+                                     (enum marca_t)response->cars[i]->marca,
                                      response->cars[i]->modelo,
-                                     response->cars[i]->combustivel);
+                                     (enum combustivel_t)response->cars[i]->combustivel);
                 if (cars[i] == NULL) {
                     while (i > 0) {
                         data_destroy(cars[--i]);
