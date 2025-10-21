@@ -20,7 +20,7 @@ static enum marca_t parse_marca(const char *str) {
     if (strcmp(str, "RENAULT") == 0) return MARCA_RENAULT;
     if (strcmp(str, "AUDI") == 0) return MARCA_AUDI;
     if (strcmp(str, "MERCEDES") == 0) return MARCA_MERCEDES;
-    return MARCA_TOYOTA; // default
+    return MARCA_TOYOTA;
 }
 
 static const char *marca_to_string(enum marca_t marca) {
@@ -39,7 +39,7 @@ static enum combustivel_t parse_combustivel(const char *str) {
     if (strcmp(str, "GASOLEO") == 0) return COMBUSTIVEL_GASOLEO;
     if (strcmp(str, "ELETRICO") == 0) return COMBUSTIVEL_ELETRICO;
     if (strcmp(str, "HIBRIDO") == 0) return COMBUSTIVEL_HIBRIDO;
-    return COMBUSTIVEL_GASOLINA; // default
+    return COMBUSTIVEL_GASOLINA;
 }
 
 static const char *combustivel_to_string(enum combustivel_t combustivel) {
@@ -67,7 +67,6 @@ static void cmd_add(struct rlist_t *rlist, char *line) {
     float preco;
     char marca_str[50], modelo[100], combustivel_str[50];
 
-    // Parse: add <ano> <preco> <marca> <modelo> <combustivel>
     if (sscanf(line, "add %d %f %s %s %s", &ano, &preco, marca_str, modelo, combustivel_str) != 5) {
         printf("Erro: Utilização correta: add <ano> <preco> <marca> <modelo> <combustivel>\n");
         printf("Exemplo: add 2020 25000.50 TOYOTA Corolla GASOLINA\n");
@@ -89,14 +88,12 @@ static void cmd_add(struct rlist_t *rlist, char *line) {
         printf("Erro ao adicionar carro.\n");
     }
 
-    // Libertar memória local (servidor já recebeu cópia dos dados)
     data_destroy(car);
 }
 
 static void cmd_remove(struct rlist_t *rlist, char *line) {
     char modelo[100];
 
-    // Parse: remove <modelo>
     if (sscanf(line, "remove %s", modelo) != 1) {
         printf("Erro: Utilização correta: remove <modelo>\n");
         printf("Exemplo: remove Corolla\n");
@@ -114,7 +111,6 @@ static void cmd_remove(struct rlist_t *rlist, char *line) {
 static void cmd_get_by_marca(struct rlist_t *rlist, char *line) {
     char marca_str[50];
 
-    // Parse: get_by_marca <marca>
     if (sscanf(line, "get_by_marca %s", marca_str) != 1) {
         printf("Erro: Utilização correta: get_by_marca <marca>\n");
         printf("Exemplo: get_by_marca TOYOTA\n");
@@ -135,7 +131,6 @@ static void cmd_get_by_marca(struct rlist_t *rlist, char *line) {
 static void cmd_get_by_year(struct rlist_t *rlist, char *line) {
     int ano;
 
-    // Parse: get_by_year <ano>
     if (sscanf(line, "get_by_year %d", &ano) != 1) {
         printf("Erro: Utilização correta: get_by_year <ano>\n");
         printf("Exemplo: get_by_year 2020\n");
@@ -284,21 +279,17 @@ int main(int argc, char **argv) {
         printf(">>> ");
         fflush(stdout);
 
-        // Ler linha do utilizador
         if (fgets(line, MAX_LINE, stdin) == NULL) {
             printf("\n");
             break;
         }
 
-        // Remover newline do final
         line[strcspn(line, "\n")] = 0;
 
-        // Ignorar linhas vazias
         if (strlen(line) == 0) {
             continue;
         }
 
-        // Processar comando
         if (strcmp(line, "quit") == 0) {
             printf("A desconectar...\n");
             break;

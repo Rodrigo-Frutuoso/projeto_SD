@@ -65,11 +65,9 @@ int network_main_loop(int listening_socket, struct list_t *list) {
     int connsockfd;
 
     while ((connsockfd = accept(listening_socket, (struct sockaddr *)&client, &size_client)) != -1) {
-        // Loop para processar múltiplas mensagens do mesmo cliente
         while (1) {
             MessageT *msg = network_receive(connsockfd);
             if (msg == NULL) {
-                // Cliente desconectou ou erro na leitura
                 break;
             }
 
