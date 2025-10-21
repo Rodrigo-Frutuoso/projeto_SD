@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     short port;
 
     if (argc != 2) {
-        fprintf(stderr, "Uso: %s <porto>\n", argv[0]);
+        fprintf(stderr, "Utilização: %s <porto>\n", argv[0]);
         fprintf(stderr, "Exemplo: %s 12345\n", argv[0]);
         return -1;
     }
@@ -47,14 +47,14 @@ int main(int argc, char **argv) {
     }
 
     printf("✓ Servidor a ouvir na porta %d\n", port);
-    printf("✓ Aguardando conexões de clientes...\n");
+    printf("✓ A aguardar ligações de clientes...\n");
     printf("  (Prima Ctrl+C para terminar)\n\n");
 
     if (network_main_loop(listening_socket, list) < 0) {
         fprintf(stderr, "Erro: falha no loop principal do servidor\n");
     }
 
-    printf("\nEncerrando servidor...\n");
+    printf("\nA encerrar servidor...\n");
 
     network_server_close(listening_socket);
     printf("✓ Socket fechado\n");

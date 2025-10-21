@@ -14,9 +14,6 @@
 
 #define MAX_LINE 1024
 
-/**
- * Converte string de marca para enum marca_t
- */
 static enum marca_t parse_marca(const char *str) {
     if (strcmp(str, "TOYOTA") == 0) return MARCA_TOYOTA;
     if (strcmp(str, "BMW") == 0) return MARCA_BMW;
@@ -26,9 +23,6 @@ static enum marca_t parse_marca(const char *str) {
     return MARCA_TOYOTA; // default
 }
 
-/**
- * Converte enum marca_t para string
- */
 static const char *marca_to_string(enum marca_t marca) {
     switch (marca) {
         case MARCA_TOYOTA: return "TOYOTA";
@@ -40,9 +34,6 @@ static const char *marca_to_string(enum marca_t marca) {
     }
 }
 
-/**
- * Converte string de combustível para enum combustivel_t
- */
 static enum combustivel_t parse_combustivel(const char *str) {
     if (strcmp(str, "GASOLINA") == 0) return COMBUSTIVEL_GASOLINA;
     if (strcmp(str, "GASOLEO") == 0) return COMBUSTIVEL_GASOLEO;
@@ -51,9 +42,6 @@ static enum combustivel_t parse_combustivel(const char *str) {
     return COMBUSTIVEL_GASOLINA; // default
 }
 
-/**
- * Converte enum combustivel_t para string
- */
 static const char *combustivel_to_string(enum combustivel_t combustivel) {
     switch (combustivel) {
         case COMBUSTIVEL_GASOLINA: return "GASOLINA";
@@ -64,9 +52,6 @@ static const char *combustivel_to_string(enum combustivel_t combustivel) {
     }
 }
 
-/**
- * Imprime os dados de um carro
- */
 static void print_car(struct data_t *car) {
     if (car == NULL) {
         printf("Carro não encontrado.\n");
@@ -77,9 +62,6 @@ static void print_car(struct data_t *car) {
            car->modelo, combustivel_to_string(car->combustivel));
 }
 
-/**
- * Processa o comando 'add'
- */
 static void cmd_add(struct rlist_t *rlist, char *line) {
     int ano;
     float preco;
@@ -87,7 +69,7 @@ static void cmd_add(struct rlist_t *rlist, char *line) {
 
     // Parse: add <ano> <preco> <marca> <modelo> <combustivel>
     if (sscanf(line, "add %d %f %s %s %s", &ano, &preco, marca_str, modelo, combustivel_str) != 5) {
-        printf("Erro: Uso correto: add <ano> <preco> <marca> <modelo> <combustivel>\n");
+        printf("Erro: Utilização correta: add <ano> <preco> <marca> <modelo> <combustivel>\n");
         printf("Exemplo: add 2020 25000.50 TOYOTA Corolla GASOLINA\n");
         return;
     }
@@ -111,15 +93,12 @@ static void cmd_add(struct rlist_t *rlist, char *line) {
     data_destroy(car);
 }
 
-/**
- * Processa o comando 'remove'
- */
 static void cmd_remove(struct rlist_t *rlist, char *line) {
     char modelo[100];
 
     // Parse: remove <modelo>
     if (sscanf(line, "remove %s", modelo) != 1) {
-        printf("Erro: Uso correto: remove <modelo>\n");
+        printf("Erro: Utilização correta: remove <modelo>\n");
         printf("Exemplo: remove Corolla\n");
         return;
     }
@@ -132,15 +111,12 @@ static void cmd_remove(struct rlist_t *rlist, char *line) {
     }
 }
 
-/**
- * Processa o comando 'get_by_marca'
- */
 static void cmd_get_by_marca(struct rlist_t *rlist, char *line) {
     char marca_str[50];
 
     // Parse: get_by_marca <marca>
     if (sscanf(line, "get_by_marca %s", marca_str) != 1) {
-        printf("Erro: Uso correto: get_by_marca <marca>\n");
+        printf("Erro: Utilização correta: get_by_marca <marca>\n");
         printf("Exemplo: get_by_marca TOYOTA\n");
         return;
     }
@@ -156,15 +132,12 @@ static void cmd_get_by_marca(struct rlist_t *rlist, char *line) {
     }
 }
 
-/**
- * Processa o comando 'get_by_year'
- */
 static void cmd_get_by_year(struct rlist_t *rlist, char *line) {
     int ano;
 
     // Parse: get_by_year <ano>
     if (sscanf(line, "get_by_year %d", &ano) != 1) {
-        printf("Erro: Uso correto: get_by_year <ano>\n");
+        printf("Erro: Utilização correta: get_by_year <ano>\n");
         printf("Exemplo: get_by_year 2020\n");
         return;
     }
@@ -192,9 +165,6 @@ static void cmd_get_by_year(struct rlist_t *rlist, char *line) {
     free(cars);
 }
 
-/**
- * Processa o comando 'get_list_ordered_by_year'
- */
 static void cmd_get_list_ordered_by_year(struct rlist_t *rlist) {
     if (rlist_order_by_year(rlist) == 0) {
         printf("\nModelos ordenados por ano:\n");
@@ -226,9 +196,6 @@ static void cmd_get_list_ordered_by_year(struct rlist_t *rlist) {
     }
 }
 
-/**
- * Processa o comando 'get_model_list'
- */
 static void cmd_get_model_list(struct rlist_t *rlist) {
     char **models = rlist_get_model_list(rlist);
 
@@ -252,9 +219,6 @@ static void cmd_get_model_list(struct rlist_t *rlist) {
     rlist_free_model_list(models);
 }
 
-/**
- * Processa o comando 'size'
- */
 static void cmd_size(struct rlist_t *rlist) {
     int size = rlist_size(rlist);
 
@@ -265,9 +229,6 @@ static void cmd_size(struct rlist_t *rlist) {
     }
 }
 
-/**
- * Mostra menu de ajuda
- */
 static void print_help() {
     printf("\n=== COMANDOS DISPONÍVEIS ===\n");
     printf("  add <ano> <preco> <marca> <modelo> <combustivel>\n");
@@ -291,37 +252,23 @@ static void print_help() {
     printf("  help\n");
     printf("      - Mostra esta mensagem de ajuda\n\n");
     printf("  quit\n");
-    printf("      - Sai do programa\n");
+    printf("      - Termina o programa\n");
     printf("============================\n\n");
 }
 
-/**
- * Programa principal do cliente
- */
 int main(int argc, char **argv) {
     struct rlist_t *rlist;
     char line[MAX_LINE];
 
-    /* ========================================================================
-     * 1. VALIDAR ARGUMENTOS
-     * ======================================================================== */
     if (argc != 2) {
-        fprintf(stderr, "Uso: %s <servidor>:<porta>\n", argv[0]);
+        fprintf(stderr, "Utilização: %s <servidor>:<porta>\n", argv[0]);
         fprintf(stderr, "Exemplo: %s localhost:12345\n", argv[0]);
         return -1;
     }
 
-    /* ========================================================================
-     * 2. IGNORAR SIGPIPE
-     *
-     * Evita que o programa termine se o servidor fechar a conexão abruptamente
-     * ======================================================================== */
     signal(SIGPIPE, SIG_IGN);
 
-    /* ========================================================================
-     * 3. CONECTAR AO SERVIDOR
-     * ======================================================================== */
-    printf("Conectando ao servidor %s...\n", argv[1]);
+    printf("A conectar ao servidor %s...\n", argv[1]);
     rlist = rlist_connect(argv[1]);
 
     if (rlist == NULL) {
@@ -333,9 +280,6 @@ int main(int argc, char **argv) {
     printf("✓ Conectado com sucesso!\n");
     printf("Digite 'help' para ver os comandos disponíveis.\n\n");
 
-    /* ========================================================================
-     * 4. LOOP PRINCIPAL - PROCESSAR COMANDOS
-     * ======================================================================== */
     while (1) {
         printf(">>> ");
         fflush(stdout);
@@ -389,9 +333,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    /* ========================================================================
-     * 5. DESCONECTAR E LIMPAR RECURSOS
-     * ======================================================================== */
     if (rlist_disconnect(rlist) == 0) {
         printf("✓ Desconectado com sucesso.\n");
     } else {
