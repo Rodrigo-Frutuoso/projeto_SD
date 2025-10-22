@@ -31,15 +31,21 @@ Este projeto implementa um sistema cliente-servidor usando Protocol Buffers:
 - `lib/` biblioteca liblist.a (gerada pelo make)
 - `binary/` executáveis (gerados pelo make)
 
-## Como compilar e executar
+## Geração dos ficheiros Protocol Buffers
 
-- copiar sdmessage.proto para diretório do projeto
+Os ficheiros `sdmessage.pb-c.h` e `sdmessage.pb-c.c` foram gerados a partir do ficheiro `sdmessage.proto` fornecido pelos docentes, utilizando o comando `protoc-c` no terminal:
 
 ```bash
 protoc-c --c_out=. sdmessage.proto
 ```
 
-- arrumar sdmessage.pb-c.[c/h] no source e include respetivamente.
+Após a geração, os ficheiros foram movidos para os diretórios corretos:
+- `sdmessage.pb-c.h` → `include/`
+- `sdmessage.pb-c.c` → `source/`
+
+**Nota:** Os ficheiros `.pb-c.h` e `.pb-c.c` já estão incluídos nesta entrega e foram gerados nos laboratórios. Não é necessário regenerá-los para compilar o projeto.
+
+## Como compilar e executar
 
 ```bash
 make
@@ -58,8 +64,10 @@ Cliente (noutro terminal):
 Exemplo:
 ```bash
 ./binary/list_server 12345
-./binary/list_client localhost:12345
+./binary/list_client 127.0.0.1:12345
 ```
+
+**Nota:** Use o endereço IP `127.0.0.1` em vez de `localhost` para evitar problemas de resolução de nomes.
 
 ## Comandos disponíveis no cliente
 - `add <ano> <preco> <marca> <modelo> <combustivel>` - adiciona carro
