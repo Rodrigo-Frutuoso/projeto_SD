@@ -29,12 +29,6 @@ int network_server_init(short port) { //SLIDES +6  TP4. Sockets
         return -1;
     }
 
-    int option = 1;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) < 0) {
-        close(sockfd);
-        return -1;
-    }
-
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
     server.sin_addr.s_addr = htonl(INADDR_ANY);
