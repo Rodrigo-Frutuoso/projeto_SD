@@ -26,8 +26,14 @@ static int server_sockfd = -1;
 int network_server_init(short port) { //SLIDES +6  TP4. Sockets
     int sockfd;
     struct sockaddr_in server;
+    int reuse = 1;
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        return -1;
+    }
+
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)) < 0) {
+        close(sockfd);
         return -1;
     }
 
