@@ -18,6 +18,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdint.h>
 
 static int server_sockfd = -1;
 
@@ -59,6 +61,8 @@ int network_main_loop(int listening_socket, struct list_t *list) {
     int connsockfd;
 
     while ((connsockfd = accept(listening_socket, (struct sockaddr *)&client, &size_client)) != -1) {
+        printf("Connection established!\n");
+        
         while (1) {
             MessageT *msg = network_receive(connsockfd);
             if (msg == NULL) {
@@ -79,6 +83,8 @@ int network_main_loop(int listening_socket, struct list_t *list) {
         }
 
         close(connsockfd);
+        printf("Connection closed!\n");
+        printf("Server ready, waiting for connections\n");
     }
 
     return -1;
@@ -89,13 +95,18 @@ MessageT *network_receive(int client_socket) {
         return NULL;
     }
 
-    uint32_t net_size;
-    if (read_all(client_socket, &net_size, sizeof(uint32_t)) != sizeof(uint32_t)) {
+    uint16_t msg_size_net;
+    
+    int bytes_read = read_all(client_socket, &msg_size_net, sizeof(uint16_t));
+    
+    if (bytes_read != sizeof(uint16_t)) {
         return NULL;
     }
 
-    uint32_t msg_size = ntohl(net_size);
-    if (msg_size == 0 || msg_size > 1048576) {
+    uint16_t msg_size_host = ntohs(msg_size_net);
+    uint32_t msg_size = msg_size_host;
+    
+    if (msg_size == 0 || msg_size > 65535) {
         return NULL;
     }
 
@@ -128,8 +139,10 @@ int network_send(int client_socket, MessageT *msg) {
 
     message_t__pack(msg, buffer);
 
-    uint32_t net_size = htonl(msg_size);
-    if (write_all(client_socket, &net_size, sizeof(uint32_t)) != sizeof(uint32_t)) {
+    uint16_t size_host = (uint16_t)msg_size;
+    uint16_t size_net = htons(size_host);
+    
+    if (write_all(client_socket, &size_net, sizeof(uint16_t)) != sizeof(uint16_t)) {
         free(buffer);
         return -1;
     }

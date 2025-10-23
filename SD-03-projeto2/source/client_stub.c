@@ -105,7 +105,8 @@ int rlist_remove_by_model(struct rlist_t *rlist, const char *modelo) {
     msg.opcode = MESSAGE_T__OPCODE__OP_DEL;
     msg.c_type = MESSAGE_T__C_TYPE__CT_MODEL;
     msg.n_models = 1;
-    msg.models = (char **)&modelo;
+    char *models_array[1] = {(char *)modelo};
+    msg.models = models_array;
 
     MessageT *response = network_send_receive(rlist, &msg);
     if (response == NULL) {

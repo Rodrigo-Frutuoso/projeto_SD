@@ -33,36 +33,27 @@ int main(int argc, char **argv) {
 
     list = list_skel_init();
     if (list == NULL) {
-        fprintf(stderr, "Erro: falha ao inicializar a lista de carros\n");
+        fprintf(stderr, "Erro ao inicializar a lista\n");
         return -1;
     }
 
-    printf("✓ Lista de carros inicializada\n");
-
     listening_socket = network_server_init(port);
     if (listening_socket < 0) {
-        fprintf(stderr, "Erro: falha ao inicializar servidor na porta %d\n", port);
+        fprintf(stderr, "Error initializing network\n");
         list_skel_destroy(list);
         return -1;
     }
 
-    printf("✓ Servidor a ouvir na porta %d\n", port);
-    printf("✓ A aguardar ligações de clientes...\n");
-    printf("  (Prima Ctrl+C para terminar)\n\n");
+    printf("Server ready, waiting for connections\n");
 
     if (network_main_loop(listening_socket, list) < 0) {
-        fprintf(stderr, "Erro: falha no loop principal do servidor\n");
+        fprintf(stderr, "Erro no loop principal do servidor\n");
     }
 
-    printf("\nA encerrar servidor...\n");
+        printf("Fechas\n");
 
     network_server_close(listening_socket);
-    printf("✓ Socket fechado\n");
-
     list_skel_destroy(list);
-    printf("✓ Lista destruída e memória libertada\n");
-
-    printf("Servidor terminado.\n");
 
     return 0;
 }

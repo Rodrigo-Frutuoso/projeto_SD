@@ -1,0 +1,8 @@
+add Corolla 2020 25000 0 0
+add 120d 2010 35000 1 1
+add Clio 2019 18000 2 0
+size
+get_model_list
+remove Clio
+size
+quit

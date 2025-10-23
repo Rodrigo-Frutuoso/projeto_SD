@@ -14,41 +14,24 @@
 
 #define MAX_LINE 1024
 
-static enum marca_t parse_marca(const char *str) {
-    if (strcmp(str, "TOYOTA") == 0) return MARCA_TOYOTA;
-    if (strcmp(str, "BMW") == 0) return MARCA_BMW;
-    if (strcmp(str, "RENAULT") == 0) return MARCA_RENAULT;
-    if (strcmp(str, "AUDI") == 0) return MARCA_AUDI;
-    if (strcmp(str, "MERCEDES") == 0) return MARCA_MERCEDES;
-    return MARCA_TOYOTA;
-}
-
-static const char *marca_to_string(enum marca_t marca) {
-    switch (marca) {
-        case MARCA_TOYOTA: return "TOYOTA";
-        case MARCA_BMW: return "BMW";
-        case MARCA_RENAULT: return "RENAULT";
-        case MARCA_AUDI: return "AUDI";
-        case MARCA_MERCEDES: return "MERCEDES";
-        default: return "UNKNOWN";
+static enum marca_t parse_marca(int marca_num) {
+    switch (marca_num) {
+        case 0: return MARCA_TOYOTA;
+        case 1: return MARCA_BMW;
+        case 2: return MARCA_RENAULT;
+        case 3: return MARCA_AUDI;
+        case 4: return MARCA_MERCEDES;
+        default: return MARCA_TOYOTA;
     }
 }
 
-static enum combustivel_t parse_combustivel(const char *str) {
-    if (strcmp(str, "GASOLINA") == 0) return COMBUSTIVEL_GASOLINA;
-    if (strcmp(str, "GASOLEO") == 0) return COMBUSTIVEL_GASOLEO;
-    if (strcmp(str, "ELETRICO") == 0) return COMBUSTIVEL_ELETRICO;
-    if (strcmp(str, "HIBRIDO") == 0) return COMBUSTIVEL_HIBRIDO;
-    return COMBUSTIVEL_GASOLINA;
-}
-
-static const char *combustivel_to_string(enum combustivel_t combustivel) {
-    switch (combustivel) {
-        case COMBUSTIVEL_GASOLINA: return "GASOLINA";
-        case COMBUSTIVEL_GASOLEO: return "GASOLEO";
-        case COMBUSTIVEL_ELETRICO: return "ELETRICO";
-        case COMBUSTIVEL_HIBRIDO: return "HIBRIDO";
-        default: return "UNKNOWN";
+static enum combustivel_t parse_combustivel(int combustivel_num) {
+    switch (combustivel_num) {
+        case 0: return COMBUSTIVEL_GASOLINA;
+        case 1: return COMBUSTIVEL_GASOLEO;
+        case 2: return COMBUSTIVEL_ELETRICO;
+        case 3: return COMBUSTIVEL_HIBRIDO;
+        default: return COMBUSTIVEL_GASOLINA;
     }
 }
 
@@ -57,24 +40,27 @@ static void print_car(struct data_t *car) {
         printf("Carro não encontrado.\n");
         return;
     }
-    printf("Ano: %d, Preço: %.2f, Marca: %s, Modelo: %s, Combustível: %s\n",
-           car->ano, car->preco, marca_to_string(car->marca),
-           car->modelo, combustivel_to_string(car->combustivel));
+    printf("Modelo: %s\n", car->modelo);
+    printf("Ano: %d\n", car->ano);
+    printf("Preço: %.2f\n", car->preco);
+    printf("Marca: %d\n", car->marca);
+    printf("Combustível: %d\n", car->combustivel);
 }
 
 static void cmd_add(struct rlist_t *rlist, char *line) {
     int ano;
     float preco;
-    char marca_str[50], modelo[100], combustivel_str[50];
+    int marca_num, combustivel_num;
+    char modelo[100];
 
-    if (sscanf(line, "add %d %f %s %s %s", &ano, &preco, marca_str, modelo, combustivel_str) != 5) {
-        printf("Erro: Utilização correta: add <ano> <preco> <marca> <modelo> <combustivel>\n");
-        printf("Exemplo: add 2020 25000.50 TOYOTA Corolla GASOLINA\n");
+    if (sscanf(line, "add %s %d %f %d %d", modelo, &ano, &preco, &marca_num, &combustivel_num) != 5) {
+        printf("Erro: Utilização correta: add <modelo> <ano> <preco> <marca:0-4> <combustivel:0-3>\n");
+        printf("Exemplo: add Corolla 2020 25000.50 0 0\n");
         return;
     }
 
-    enum marca_t marca = parse_marca(marca_str);
-    enum combustivel_t combustivel = parse_combustivel(combustivel_str);
+    enum marca_t marca = parse_marca(marca_num);
+    enum combustivel_t combustivel = parse_combustivel(combustivel_num);
 
     struct data_t *car = data_create(ano, preco, marca, modelo, combustivel);
     if (car == NULL) {
@@ -102,22 +88,22 @@ static void cmd_remove(struct rlist_t *rlist, char *line) {
 
     int result = rlist_remove_by_model(rlist, modelo);
     if (result == 0) {
-        printf("Carro removido com sucesso.\n");
+        printf("Carro removido.\n");
     } else {
         printf("Carro não encontrado.\n");
     }
 }
 
 static void cmd_get_by_marca(struct rlist_t *rlist, char *line) {
-    char marca_str[50];
+    int marca_num;
 
-    if (sscanf(line, "get_by_marca %s", marca_str) != 1) {
-        printf("Erro: Utilização correta: get_by_marca <marca>\n");
-        printf("Exemplo: get_by_marca TOYOTA\n");
+    if (sscanf(line, "get_by_marca %d", &marca_num) != 1) {
+        printf("Erro: Utilização correta: get_by_marca <marca:0-4>\n");
+        printf("Exemplo: get_by_marca 0\n");
         return;
     }
 
-    enum marca_t marca = parse_marca(marca_str);
+    enum marca_t marca = parse_marca(marca_num);
     struct data_t *car = rlist_get_by_marca(rlist, marca);
 
     if (car != NULL) {
@@ -153,41 +139,31 @@ static void cmd_get_by_year(struct rlist_t *rlist, char *line) {
 
     if (count == 0) {
         printf("Nenhum carro encontrado para o ano %d.\n", ano);
-    } else {
-        printf("Total: %d carro(s) encontrado(s).\n", count);
     }
 
     free(cars);
 }
 
 static void cmd_get_list_ordered_by_year(struct rlist_t *rlist) {
-    if (rlist_order_by_year(rlist) == 0) {
-        printf("\nModelos ordenados por ano:\n");
-        printf("---------------------------\n");
+    if (rlist_order_by_year(rlist) != 0) {
+        printf("Erro ao ordenar lista.\n");
+        return;
+    }
 
-        char **models = rlist_get_model_list(rlist);
-
-        if (models == NULL) {
-            printf("Erro ao obter lista de modelos.\n");
-            return;
+    for (int ano = 1900; ano <= 2100; ano++) {
+        struct data_t **cars = rlist_get_by_year(rlist, ano);
+        if (cars == NULL) {
+            continue;
         }
 
         int count = 0;
-        while (models[count] != NULL) {
-            printf("%d. %s\n", count + 1, models[count]);
+        while (cars[count] != NULL) {
+            print_car(cars[count]);
+            data_destroy(cars[count]);
             count++;
         }
 
-        if (count == 0) {
-            printf("Lista vazia.\n");
-        } else {
-            printf("---------------------------\n");
-            printf("Total: %d modelo(s) ordenado(s).\n", count);
-        }
-
-        rlist_free_model_list(models);
-    } else {
-        printf("Erro ao ordenar lista.\n");
+        free(cars);
     }
 }
 
@@ -201,14 +177,12 @@ static void cmd_get_model_list(struct rlist_t *rlist) {
 
     int count = 0;
     while (models[count] != NULL) {
-        printf("%d. %s\n", count + 1, models[count]);
+        printf("Modelo: %s\n", models[count]);
         count++;
     }
 
     if (count == 0) {
         printf("Lista vazia.\n");
-    } else {
-        printf("Total: %d modelo(s).\n", count);
     }
 
     rlist_free_model_list(models);
@@ -218,37 +192,23 @@ static void cmd_size(struct rlist_t *rlist) {
     int size = rlist_size(rlist);
 
     if (size >= 0) {
-        printf("Número de carros na lista: %d\n", size);
+        printf("List size: %d\n", size);
     } else {
         printf("Erro ao obter tamanho da lista.\n");
     }
 }
 
 static void print_help() {
-    printf("\n=== COMANDOS DISPONÍVEIS ===\n");
-    printf("  add <ano> <preco> <marca> <modelo> <combustivel>\n");
-    printf("      - Adiciona um carro à lista\n");
-    printf("      - Exemplo: add 2020 25000.50 TOYOTA Corolla GASOLINA\n\n");
+    printf("Comandos disponíveis:\n");
+    printf("  add <modelo> <ano> <preco> <marca:0-4> <combustivel:0-3>\n");
     printf("  remove <modelo>\n");
-    printf("      - Remove um carro pelo modelo\n");
-    printf("      - Exemplo: remove Corolla\n\n");
-    printf("  get_by_marca <marca>\n");
-    printf("      - Obtém o primeiro carro da marca especificada\n");
-    printf("      - Exemplo: get_by_marca TOYOTA\n\n");
+    printf("  get_by_marca <marca:0-4>\n");
     printf("  get_by_year <ano>\n");
-    printf("      - Obtém todos os carros de um ano específico\n");
-    printf("      - Exemplo: get_by_year 2020\n\n");
     printf("  get_list_ordered_by_year\n");
-    printf("      - Ordena a lista por ano de fabrico\n\n");
-    printf("  get_model_list\n");
-    printf("      - Lista todos os modelos de carros\n\n");
     printf("  size\n");
-    printf("      - Mostra o número de carros na lista\n\n");
+    printf("  get_model_list\n");
     printf("  help\n");
-    printf("      - Mostra esta mensagem de ajuda\n\n");
     printf("  quit\n");
-    printf("      - Termina o programa\n");
-    printf("============================\n\n");
 }
 
 int main(int argc, char **argv) {
@@ -263,35 +223,40 @@ int main(int argc, char **argv) {
 
     signal(SIGPIPE, SIG_IGN);
 
-    printf("A conectar ao servidor %s...\n", argv[1]);
     rlist = rlist_connect(argv[1]);
 
     if (rlist == NULL) {
-        fprintf(stderr, "Erro: Não foi possível conectar ao servidor %s\n", argv[1]);
-        fprintf(stderr, "Verifique se o servidor está em execução e o endereço está correto.\n");
+        fprintf(stderr, "Erro ao conectar ao servidor %s\n", argv[1]);
         return -1;
     }
 
-    printf("✓ Conectado com sucesso!\n");
-    printf("Digite 'help' para ver os comandos disponíveis.\n\n");
+    char address_copy[256];
+    strncpy(address_copy, argv[1], sizeof(address_copy) - 1);
+    address_copy[sizeof(address_copy) - 1] = '\0';
+    
+    char *colon = strchr(address_copy, ':');
+    if (colon != NULL) {
+        *colon = '\0';
+    }
+    
+    printf("Ligado a %s\n", address_copy);
+    print_help();
 
     while (1) {
-        printf(">>> ");
-        fflush(stdout);
+        printf("Command: ");
 
         if (fgets(line, MAX_LINE, stdin) == NULL) {
             printf("\n");
             break;
         }
 
-        line[strcspn(line, "\n")] = 0;
+        line[strcspn(line, "\r\n")] = 0;
 
         if (strlen(line) == 0) {
             continue;
         }
 
         if (strcmp(line, "quit") == 0) {
-            printf("A desconectar...\n");
             break;
         }
         else if (strcmp(line, "help") == 0) {
@@ -319,18 +284,11 @@ int main(int argc, char **argv) {
             cmd_size(rlist);
         }
         else {
-            printf("Comando não reconhecido: '%s'\n", line);
-            printf("Digite 'help' para ver os comandos disponíveis.\n");
+            printf("Comando inválido. Escreve 'help' para ajuda.\n");
         }
     }
 
-    if (rlist_disconnect(rlist) == 0) {
-        printf("✓ Desconectado com sucesso.\n");
-    } else {
-        printf("Aviso: Erro ao desconectar.\n");
-    }
-
-    printf("Cliente terminado.\n");
+    rlist_disconnect(rlist);
 
     return 0;
 }

@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 int network_connect(struct rlist_t *rlist) { //SLIDES +11  TP4. Sockets
     if (rlist == NULL || rlist->server_address == NULL) {
@@ -67,8 +68,9 @@ MessageT *network_send_receive(struct rlist_t *rlist, MessageT *msg) {
 
     message_t__pack(msg, buffer);
 
-    uint32_t net_size = htonl(msg_size);
-    if (write_all(rlist->sockfd, &net_size, sizeof(uint32_t)) != sizeof(uint32_t)) {
+    uint16_t size_host = (uint16_t)msg_size;
+    uint16_t size_net = htons(size_host);
+    if (write_all(rlist->sockfd, &size_net, sizeof(uint16_t)) != sizeof(uint16_t)) {
         free(buffer);
         return NULL;
     }
@@ -79,10 +81,14 @@ MessageT *network_send_receive(struct rlist_t *rlist, MessageT *msg) {
     }
     free(buffer);
 
-    if (read_all(rlist->sockfd, &net_size, sizeof(uint32_t)) != sizeof(uint32_t)) {
+    uint16_t response_size_net;
+    
+    if (read_all(rlist->sockfd, &response_size_net, sizeof(uint16_t)) != sizeof(uint16_t)) {
         return NULL;
     }
-    uint32_t response_size = ntohl(net_size);
+    
+    uint16_t response_size_host = ntohs(response_size_net);
+    uint32_t response_size = response_size_host;
 
     uint8_t *response_buffer = malloc(response_size);
     if (response_buffer == NULL) {

@@ -53,8 +53,8 @@ $(OBJDIR) $(LIBDIR) $(BINDIR):
 
 clean:
 	@rm -f $(GENERATED_OBJS)
-	@rm -rf $(LIBDIR) $(BINDIR)
+	@rm -f $(BINDIR)/list_server $(BINDIR)/list_client
+	@rm -rf $(LIBDIR)
 	@echo "🧹 Limpeza concluída!"
-# manter data.o e list.o
 
 .PHONY: all liblist list_server list_client clean
