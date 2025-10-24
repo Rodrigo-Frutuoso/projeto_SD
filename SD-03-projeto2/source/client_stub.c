@@ -14,8 +14,6 @@
 #include <string.h>
 #include <stdio.h>
 
-static struct data_t **cached_ordered_cars = NULL;
-
 struct rlist_t *rlist_connect(char *address_port) {
     if (address_port == NULL) {
         return NULL;
@@ -206,14 +204,6 @@ int rlist_order_by_year(struct rlist_t *rlist) {
         return -1;
     }
 
-    if (cached_ordered_cars != NULL) {
-        for (int i = 0; cached_ordered_cars[i] != NULL; i++) {
-            data_destroy(cached_ordered_cars[i]);
-        }
-        free(cached_ordered_cars);
-        cached_ordered_cars = NULL;
-    }
-
     MessageT msg = MESSAGE_T__INIT;
     msg.opcode = MESSAGE_T__OPCODE__OP_GETLISTBYTEAR;
     msg.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
@@ -224,34 +214,8 @@ int rlist_order_by_year(struct rlist_t *rlist) {
         return -1;
     }
 
-    int result = -1;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_GETLISTBYTEAR + 1 &&
-        response->c_type == MESSAGE_T__C_TYPE__CT_LIST) {
-        
-        cached_ordered_cars = malloc((response->n_cars + 1) * sizeof(struct data_t *));
-        if (cached_ordered_cars != NULL) {
-            size_t i;
-            for (i = 0; i < response->n_cars; i++) {
-                cached_ordered_cars[i] = data_create(response->cars[i]->ano,
-                                                     response->cars[i]->preco,
-                                                     (enum marca_t)response->cars[i]->marca,
-                                                     response->cars[i]->modelo,
-                                                     (enum combustivel_t)response->cars[i]->combustivel);
-                if (cached_ordered_cars[i] == NULL) {
-                    while (i > 0) {
-                        data_destroy(cached_ordered_cars[--i]);
-                    }
-                    free(cached_ordered_cars);
-                    cached_ordered_cars = NULL;
-                    break;
-                }
-            }
-            if (cached_ordered_cars != NULL) {
-                cached_ordered_cars[response->n_cars] = NULL;
-                result = 0;
-            }
-        }
-    }
+    int result = (response->opcode == MESSAGE_T__OPCODE__OP_GETLISTBYTEAR + 1 &&
+                  response->c_type == MESSAGE_T__C_TYPE__CT_LIST) ? 0 : -1;
 
     message_t__free_unpacked(response, NULL);
     return result;
