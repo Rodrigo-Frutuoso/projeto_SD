@@ -7,77 +7,149 @@ Grupo 03
 
 Projeto 2 — Sistemas Distribuídos 2025/2026
 
-Este projeto implementa um sistema cliente-servidor usando Protocol Buffers:
-- `list_client` - cliente interativo com comandos para gerir inventário de carros
-- `list_server` - servidor que mantém a lista em memória e atende pedidos
-- `client_stub.c/h` - stub RPC do lado do cliente
-- `network_client.c/h` - comunicação TCP do cliente
-- `list_skel.c/h` - skeleton RPC do lado do servidor
-- `network_server.c/h` - comunicação TCP do servidor
-- `message-private.c/h` - funções auxiliares para envio/receção de mensagens
+Este projeto implementa um sistema cliente-servidor de gestão de inventário para um stand automóvel, usando o paradigma RPC (Remote Procedure Calls) e Protocol Buffers para comunicação.
+
+## Arquitetura
+
+### Cliente (`list_client`)
+- **list_client.c** - programa principal com interface de utilizador
+- **client_stub.c/h** - stub RPC do lado do cliente (adaptação de chamadas)
+- **network_client.c/h** - módulo de comunicação TCP do cliente
+
+### Servidor (`list_server`)
+- **list_server.c** - programa principal do servidor
+- **list_skel.c/h** - skeleton RPC do lado do servidor (processamento de pedidos)
+- **network_server.c/h** - módulo de comunicação TCP do servidor
+
+### Módulos auxiliares
+- **message-private.c/h** - funções `read_all()` e `write_all()` para I/O completo
+- **data.c/h** e **list.c/h** - estruturas de dados do projeto 1
+- **sdmessage.pb-c.c/h** - gerados automaticamente pelo Protocol Buffers
 
 ## Notas de implementação
-- Usa Protocol Buffers (sdmessage.proto fornecido) para serialização/desserialização
-- Servidor atende um cliente de cada vez (concorrência será implementada no projeto 3)
-- Antes de enviar/receber mensagem, envia-se/recebe-se um inteiro de 4 bytes (network byte order) com o tamanho da mensagem
-- Implementadas funções `read_all()` e `write_all()` para garantir leitura/escrita completa
-- Servidor ignora SIGPIPE e usa SO_REUSEADDR para reinicialização rápida
-- Usa ficheiros objeto `data.o` e `list.o` fornecidos pelos docentes
+
+### Protocolo de comunicação
+- Usa **Protocol Buffers** (sdmessage.proto) para serialização/desserialização
+- Antes de cada mensagem, envia-se um **short (2 bytes)** em network byte order com o tamanho
+- Mensagens seguem formato definido: `{opcode, c_type, [dados]}`
+- Resposta bem-sucedida: `opcode = pedido + 1`
+- Resposta com erro: `{OP_ERROR, CT_NONE}`
+
+### Características técnicas
+- Servidor atende **um cliente de cada vez** (concorrência no projeto 3)
+- Funções `read_all()` e `write_all()` garantem leitura/escrita completa em sockets
+- Servidor ignora **SIGPIPE** para evitar crashes inesperados
+- Usa **SO_REUSEADDR** para reinicialização rápida do servidor
+- Gestão rigorosa de memória para evitar *memory leaks*
+
+### Simplificações implementadas
+- Função auxiliar `validate_response()` no cliente para validação consistente
+- Função auxiliar `create_data_message()` no servidor para reduzir duplicação de código
+- Comando `quit` encerra elegantemente o cliente
 
 ## Estrutura de diretórios
-- `include/` headers
-- `source/` código C
-- `object/` objetos (gerados pelo make, exceto data.o e list.o fornecidos)
-- `lib/` biblioteca liblist.a (gerada pelo make)
-- `binary/` executáveis (gerados pelo make)
+```
+SD-03-projeto2/
+├── include/          # Ficheiros .h (headers)
+├── source/           # Ficheiros .c (código fonte)
+├── object/           # Ficheiros .o (gerados pelo make)
+├── lib/              # liblist.a (gerada pelo make)
+├── binary/           # Executáveis list_client e list_server
+├── dependencies/     # Dependências de compilação
+├── Makefile          # Automatização da compilação
+├── sdmessage.proto   # Definição Protocol Buffers
+└── README.md         # Este ficheiro
+```
 
 ## Geração dos ficheiros Protocol Buffers
 
-Os ficheiros `sdmessage.pb-c.h` e `sdmessage.pb-c.c` foram gerados a partir do ficheiro `sdmessage.proto` fornecido pelos docentes, utilizando o comando `protoc-c` no terminal:
+Os ficheiros `sdmessage.pb-c.h` e `sdmessage.pb-c.c` foram gerados a partir de `sdmessage.proto` usando o compilador Protocol Buffers:
 
 ```bash
 protoc-c --c_out=. sdmessage.proto
 ```
 
-Após a geração, os ficheiros foram movidos para os diretórios corretos:
+Após geração, os ficheiros foram movidos para:
 - `sdmessage.pb-c.h` → `include/`
 - `sdmessage.pb-c.c` → `source/`
 
-**Nota:** Os ficheiros `.pb-c.h` e `.pb-c.c` já estão incluídos nesta entrega e foram gerados nos laboratórios. Não é necessário regenerá-los para compilar o projeto.
+**Nota:** Os ficheiros já estão incluídos e não precisam ser regenerados.
 
 ## Como compilar e executar
 
+### Compilação
 ```bash
 make
 ```
 
-Servidor:
+O Makefile inclui os seguintes targets:
+- `make all` - compila tudo (liblist, cliente e servidor)
+- `make liblist` - cria biblioteca liblist.a
+- `make list_client` - compila apenas o cliente
+- `make list_server` - compila apenas o servidor
+- `make clean` - remove ficheiros gerados
+
+### Execução
+
+**Servidor:**
 ```bash
 ./binary/list_server <porta>
 ```
 
-Cliente (noutro terminal):
+**Cliente (noutro terminal):**
 ```bash
 ./binary/list_client <servidor>:<porta>
 ```
 
-Exemplo:
+**Exemplo:**
 ```bash
+# Terminal 1
 ./binary/list_server 12345
+
+# Terminal 2
 ./binary/list_client 127.0.0.1:12345
 ```
 
-**Nota:** Use o endereço IP `127.0.0.1` em vez de `localhost` para evitar problemas de resolução de nomes.
+**Nota:** Use `127.0.0.1` em vez de `localhost` para evitar problemas de resolução DNS.
 
 ## Comandos disponíveis no cliente
-- `add <ano> <preco> <marca> <modelo> <combustivel>` - adiciona carro
-- `remove <modelo>` - remove carro pelo modelo
-- `get_by_marca <marca>` - obtém carro pela marca
-- `get_by_year <ano>` - obtém carros de um ano específico
-- `get_list_ordered_by_year` - obtém lista ordenada por ano
-- `get_model_list` - obtém lista de modelos
-- `size` - número de carros na lista
-- `quit` - termina cliente
+
+| Comando                       | Descrição                     | Sintaxe                                                    |
+|-------------------------------|-------------------------------|------------------------------------------------------------|
+| `add`                         | Adiciona novo carro à lista   | `add <modelo> <ano> <preco> <marca:0-4> <combustivel:0-3>` |
+| `remove`                      | Remove carro pelo modelo      | `remove <modelo>`                                          |
+| `get_by_marca`                | Obtém primeiro carro da marca | `get_by_marca <marca:0-4>`                                 |
+| `get_by_year`                 | Obtém carros de um ano        | `get_by_year <ano>`                                        |
+| `get_list_ordered_by_year`    | Lista ordenada por ano        | `get_list_ordered_by_year`                                 |
+| `get_model_list`              | Lista todos os modelos        | `get_model_list`                                           |
+| `size`                        | Número de carros na lista     | `size`                                                     |
+| `help`                        | Mostra ajuda                  | `help`                                                     |
+| `quit`                        | Termina o cliente             | `quit`                                                     |
+
+### Enumerações
+
+**Marcas (0-4):**
+- 0 = TOYOTA
+- 1 = BMW
+- 2 = RENAULT
+- 3 = AUDI
+- 4 = MERCEDES
+
+**Combustíveis (0-3):**
+- 0 = GASOLINA
+- 1 = GASÓLEO
+- 2 = ELÉTRICO
+- 3 = HÍBRIDO
+
+### Exemplos de uso
+```
+add Corolla 2020 25000.50 0 0
+remove Corolla
+get_by_marca 1
+get_by_year 2020
+size
+quit
+```
 
 ## Dependências
 ```bash
