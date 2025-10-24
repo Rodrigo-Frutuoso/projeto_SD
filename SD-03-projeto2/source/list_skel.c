@@ -132,6 +132,7 @@ int invoke(MessageT *msg, struct list_t *list) {
                 if (res == 0) {
                     msg->opcode += 1;
                     msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                    msg->result = 0;
                 } else if (res == 1) {
                     msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                     msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;

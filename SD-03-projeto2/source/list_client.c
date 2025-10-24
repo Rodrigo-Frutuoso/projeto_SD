@@ -146,25 +146,23 @@ static void cmd_get_by_year(struct rlist_t *rlist, char *line) {
 
 static void cmd_get_list_ordered_by_year(struct rlist_t *rlist) {
     if (rlist_order_by_year(rlist) != 0) {
-        printf("Erro ao ordenar lista.\n");
+        printf("Erro ao ordenar a lista por cada ano.\n");
         return;
     }
-
-    for (int ano = 1900; ano <= 2100; ano++) {
-        struct data_t **cars = rlist_get_by_year(rlist, ano);
-        if (cars == NULL) {
-            continue;
-        }
-
-        int count = 0;
-        while (cars[count] != NULL) {
-            print_car(cars[count]);
-            data_destroy(cars[count]);
-            count++;
-        }
-
-        free(cars);
+    
+    struct data_t **cars = rlist_get_by_year(rlist, -1);
+    if (cars == NULL) {
+        printf("Erro ao obter os carros por cada ano.\n");
+        return;
     }
+    
+    int i = 0;
+    while (cars[i] != NULL) {
+        print_car(cars[i]);
+        data_destroy(cars[i]);
+        i++;
+    }
+    free(cars);
 }
 
 static void cmd_get_model_list(struct rlist_t *rlist) {
