@@ -114,18 +114,9 @@ int rlist_remove_by_model(struct rlist_t *rlist, const char *modelo) {
     if (response == NULL) {
         return -1;
     }
-
-    int result = -1;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_DEL + 1) {
-        if (response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {
-            result = 0;
-        } else if (response->c_type == MESSAGE_T__C_TYPE__CT_RESULT) {
-            result = response->result;
-        }
-    }
-
+    
     message_t__free_unpacked(response, NULL);
-    return result;
+    return response->result;
 }
 
 struct data_t *rlist_get_by_marca(struct rlist_t *rlist, enum marca_t marca) {
@@ -161,78 +152,53 @@ struct data_t **rlist_get_by_year(struct rlist_t *rlist, int ano) {
         return NULL;
     }
 
-    if (ano == -1) {
-        if (cached_ordered_cars == NULL) {
-            return NULL;
-        }
-        
-        int count = 0;
-        while (cached_ordered_cars[count] != NULL) {
-            count++;
-        }
-        
-        struct data_t **result = malloc((count + 1) * sizeof(struct data_t *));
-        if (result == NULL) {
-            return NULL;
-        }
-        
-        for (int i = 0; i < count; i++) {
-            result[i] = data_create(cached_ordered_cars[i]->ano,
-                                   cached_ordered_cars[i]->preco,
-                                   cached_ordered_cars[i]->marca,
-                                   cached_ordered_cars[i]->modelo,
-                                   cached_ordered_cars[i]->combustivel);
-            if (result[i] == NULL) {
-                while (i > 0) {
-                    data_destroy(result[--i]);
-                }
-                free(result);
-                return NULL;
-            }
-        }
-        result[count] = NULL;
-        return result;
-    }
+    MessageT request = MESSAGE_T__INIT;
+    request.opcode = MESSAGE_T__OPCODE__OP_GETLISTBYTEAR;
+    request.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+    request.result = ano;
 
-    MessageT msg = MESSAGE_T__INIT;
-    msg.opcode = MESSAGE_T__OPCODE__OP_GET;
-    msg.c_type = MESSAGE_T__C_TYPE__CT_YEAR;
-    msg.result = ano;
-
-    MessageT *response = network_send_receive(rlist, &msg);
+    MessageT *response = network_send_receive(rlist, &request);
     if (response == NULL) {
         return NULL;
     }
 
-    struct data_t **cars = NULL;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_GET + 1 &&
-        response->c_type == MESSAGE_T__C_TYPE__CT_LIST) {
-        cars = malloc((response->n_cars + 1) * sizeof(struct data_t *));
-        if (cars != NULL) {
-            size_t i;
-            for (i = 0; i < response->n_cars; i++) {
-                cars[i] = data_create(response->cars[i]->ano,
-                                     response->cars[i]->preco,
-                                     (enum marca_t)response->cars[i]->marca,
-                                     response->cars[i]->modelo,
-                                     (enum combustivel_t)response->cars[i]->combustivel);
-                if (cars[i] == NULL) {
-                    while (i > 0) {
-                        data_destroy(cars[--i]);
-                    }
-                    free(cars);
-                    cars = NULL;
-                    break;
-                }
-            }
-            if (cars != NULL) {
-                cars[response->n_cars] = NULL;
-            }
-        }
+    if (response->opcode != MESSAGE_T__OPCODE__OP_GETLISTBYTEAR + 1 || 
+        response->c_type != MESSAGE_T__C_TYPE__CT_LIST ||
+        response->n_cars == 0 || response->cars == NULL) {
+        message_t__free_unpacked(response, NULL);
+        return NULL;
     }
 
+    struct data_t **car_list = malloc((response->n_cars + 1) * sizeof(struct data_t *));
+    if (car_list == NULL) {
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    size_t idx;
+    for (idx = 0; idx < response->n_cars; idx++) {
+        car_list[idx] = malloc(sizeof(struct data_t));
+        if (car_list[idx] == NULL) {
+            while (idx > 0) {
+                free(car_list[--idx]->modelo);
+                free(car_list[idx]);
+            }
+            free(car_list);
+            message_t__free_unpacked(response, NULL);
+            return NULL;
+        }
+
+        car_list[idx]->ano = response->cars[idx]->ano;
+        car_list[idx]->preco = response->cars[idx]->preco;
+        car_list[idx]->marca = (enum marca_t)response->cars[idx]->marca;
+        car_list[idx]->modelo = strdup(response->cars[idx]->modelo);
+        car_list[idx]->combustivel = (enum combustivel_t)response->cars[idx]->combustivel;
+    }
+    
+    car_list[response->n_cars] = NULL;
+
     message_t__free_unpacked(response, NULL);
-    return cars;
+    return car_list;
 }
 
 int rlist_order_by_year(struct rlist_t *rlist) {
