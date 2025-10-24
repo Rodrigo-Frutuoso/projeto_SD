@@ -164,31 +164,52 @@ RESULTS[4]=$RESULT
 cleanup_port
 
 # Comparar outputs automaticamente
-print_header "COMPARAÇÃO AUTOMÁTICA DE OUTPUTS"
+print_header "COMPARAÇÃO AUTOMÁTICA DE OUTPUTS COM BASELINE (Test 4)"
 
-echo -e "${BOLD}Comparando Test 1 (Estudante+Estudante) vs Test 4 (Professor+Professor):${NC}"
-if diff -q test1_output.txt test4_output.txt > /dev/null 2>&1; then
-    echo -e "${GREEN}✓ IDÊNTICOS${NC} - Outputs são exatamente iguais!"
-else
-    echo -e "${YELLOW}⚠ DIFERENÇAS ENCONTRADAS${NC}"
-    echo -e "\nDiferenças:"
-    diff --color=auto test1_output.txt test4_output.txt || true
-fi
-echo ""
+# Função para comparar com baseline
+compare_with_baseline() {
+    local test_num=$1
+    local test_name=$2
+    local test_file="test${test_num}_output.txt"
+    
+    echo -e "${BOLD}Comparando Test $test_num ($test_name) vs Test 4 (Baseline):${NC}"
+    
+    if [ ! -f "$test_file" ]; then
+        echo -e "${RED}✗ Ficheiro $test_file não existe${NC}"
+        echo ""
+        return
+    fi
+    
+    # Contar linhas
+    TEST_LINES=$(wc -l < "$test_file")
+    BASELINE_LINES=$(wc -l < test4_output.txt)
+    echo -e "  Linhas: Test $test_num = ${YELLOW}$TEST_LINES${NC}, Test 4 = ${YELLOW}$BASELINE_LINES${NC}"
+    
+    if diff -q "$test_file" test4_output.txt > /dev/null 2>&1; then
+        echo -e "  ${GREEN}✓ IDÊNTICOS${NC} - Outputs são exatamente iguais!"
+    else
+        echo -e "  ${YELLOW}⚠ DIFERENÇAS ENCONTRADAS${NC}"
+        
+        # Contar diferenças
+        DIFF_COUNT=$(diff "$test_file" test4_output.txt | grep -c "^[<>]" || echo "0")
+        echo -e "  ${YELLOW}Total: ${DIFF_COUNT} linha(s) diferente(s)${NC}"
+        
+        # Mostrar primeiras diferenças
+        echo ""
+        echo -e "  ${BLUE}Primeiras diferenças (lado a lado):${NC}"
+        diff --color=always -y --suppress-common-lines "$test_file" test4_output.txt | head -30 || true
+    fi
+    echo ""
+}
 
-echo -e "${BOLD}Comparando Test 2 (Professor+Estudante) vs Test 4 (Baseline):${NC}"
-if diff -q test2_output.txt test4_output.txt > /dev/null 2>&1; then
-    echo -e "${GREEN}✓ IDÊNTICOS${NC} - Outputs são exatamente iguais!"
-else
-    echo -e "${YELLOW}⚠ DIFERENÇAS ENCONTRADAS:${NC}"
-    echo ""
-    # Mostrar diferenças linha a linha
-    diff --color=always -y --suppress-common-lines test2_output.txt test4_output.txt | head -20
-    echo ""
-    DIFF_COUNT=$(diff test2_output.txt test4_output.txt | grep "^[<>]" | wc -l)
-    echo -e "${YELLOW}  Total: ${DIFF_COUNT} linha(s) diferente(s)${NC}"
-fi
-echo ""
+# Comparar Test 1
+compare_with_baseline 1 "Estudante+Estudante"
+
+# Comparar Test 2
+compare_with_baseline 2 "Professor+Estudante"
+
+# Comparar Test 3
+compare_with_baseline 3 "Estudante+Professor"
 
 
 echo -e "${BOLD}Ficheiros de output gerados:${NC}"

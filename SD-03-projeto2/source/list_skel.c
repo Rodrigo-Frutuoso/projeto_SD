@@ -121,25 +121,20 @@ int invoke(MessageT *msg, struct list_t *list) {
             break;
 
         case MESSAGE_T__OPCODE__OP_DEL:
-            {
-                if (msg->n_models == 0 || msg->models == NULL || msg->models[0] == NULL) {
-                    msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
-                    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
-                    break;
-                }
+            if (msg->c_type != MESSAGE_T__C_TYPE__CT_MODEL ||
+                msg->models == NULL) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
 
-                int res = list_remove_by_model(list, msg->models[0]);
-                if (res == 0) {
-                    msg->opcode += 1;
-                    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
-                    msg->result = 0;
-                } else if (res == 1) {
-                    msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
-                    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
-                } else {
-                    msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
-                    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
-                }
+            msg->result = list_remove_by_model(list, msg->models[0]);
+            if ( msg->result == 0) {
+                msg->opcode += 1;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+            } else {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
             }
             break;
         case MESSAGE_T__OPCODE__OP_SIZE:
@@ -184,42 +179,52 @@ int invoke(MessageT *msg, struct list_t *list) {
             break;
 
         case MESSAGE_T__OPCODE__OP_GETLISTBYTEAR:
-            {
+            if (msg->c_type != MESSAGE_T__C_TYPE__CT_RESULT) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
+
+            struct data_t **cars = NULL;
+            int all = (msg->result == -1);
+            
+            if (all) {
                 if (list_order_by_year(list) != 0) {
                     msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                     msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                     break;
                 }
+                cars = list_get_all(list);
+            } else {
+                cars = list_get_by_year(list, msg->result);
+            }
 
-                struct data_t **all_cars = list_get_all(list);
+            if (cars != NULL) {
+                int count = 0;
+                while (cars[count] != NULL) count++;
 
-                if (all_cars != NULL) {
-                    int count = 0;
-                    while (all_cars[count] != NULL) count++;
+                msg->opcode += 1;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_LIST;
+                msg->n_cars = count;
+                msg->cars = malloc(count * sizeof(Data*));
 
-                    msg->opcode += 1;
-                    msg->c_type = MESSAGE_T__C_TYPE__CT_LIST;
-                    msg->n_cars = count;
-                    msg->cars = malloc(count * sizeof(Data*));
-
-                    if (msg->cars != NULL) {
-                        for (int i = 0; i < count; i++) {
-                            msg->cars[i] = malloc(sizeof(Data));
-                            if (msg->cars[i] != NULL) {
-                                data__init(msg->cars[i]);
-                                msg->cars[i]->ano = all_cars[i]->ano;
-                                msg->cars[i]->preco = all_cars[i]->preco;
-                                msg->cars[i]->marca = (Marca)all_cars[i]->marca;
-                                msg->cars[i]->modelo = strdup(all_cars[i]->modelo);
-                                msg->cars[i]->combustivel = (Combustivel)all_cars[i]->combustivel;
-                            }
+                if (msg->cars != NULL) {
+                    for (int i = 0; i < count; i++) {
+                        msg->cars[i] = malloc(sizeof(Data));
+                        if (msg->cars[i] != NULL) {
+                            data__init(msg->cars[i]);
+                            msg->cars[i]->ano = cars[i]->ano;
+                            msg->cars[i]->preco = cars[i]->preco;
+                            msg->cars[i]->marca = (Marca)cars[i]->marca;
+                            msg->cars[i]->modelo = strdup(cars[i]->modelo);
+                            msg->cars[i]->combustivel = (Combustivel)cars[i]->combustivel;
                         }
                     }
-                    free(all_cars);
-                } else {
-                    msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
-                    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 }
+                free(cars);
+            } else {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
             }
             break;
 

@@ -250,7 +250,8 @@ int rlist_order_by_year(struct rlist_t *rlist) {
 
     MessageT msg = MESSAGE_T__INIT;
     msg.opcode = MESSAGE_T__OPCODE__OP_GETLISTBYTEAR;
-    msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+    msg.result = -1;
 
     MessageT *response = network_send_receive(rlist, &msg);
     if (response == NULL) {
