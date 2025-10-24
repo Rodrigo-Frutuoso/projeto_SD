@@ -14,7 +14,6 @@
 int main(int argc, char **argv) {
     struct list_t *list;
     int listening_socket;
-    short port;
 
     if (argc != 2) {
         fprintf(stderr, "Utilização: %s <porto>\n", argv[0]);
@@ -22,7 +21,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    port = (short) atoi(argv[1]);
+    short port = (short) atoi(argv[1]);
     if (port <= 0) {
         fprintf(stderr, "Erro: porta inválida '%s'\n", argv[1]);
         fprintf(stderr, "A porta deve ser um número entre 1 e 65535\n");
@@ -50,7 +49,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Erro no loop principal do servidor\n");
     }
 
-        printf("Fechas\n");
+    printf("Fechas\n");
 
     network_server_close(listening_socket);
     list_skel_destroy(list);

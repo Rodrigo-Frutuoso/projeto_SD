@@ -242,43 +242,19 @@ int main(int argc, char **argv) {
 
         line[strcspn(line, "\r\n")] = 0;
 
-        if (strlen(line) == 0) {
-            continue;
-        }
-
-        if (strcmp(line, "quit") == 0) {
-            break;
-        }
-        else if (strcmp(line, "help") == 0) {
-            print_help();
-        }
-        else if (strncmp(line, "add ", 4) == 0) {
-            cmd_add(rlist, line);
-        }
-        else if (strncmp(line, "remove ", 7) == 0) {
-            cmd_remove(rlist, line);
-        }
-        else if (strncmp(line, "get_by_marca ", 13) == 0) {
-            cmd_get_by_marca(rlist, line);
-        }
-        else if (strncmp(line, "get_by_year ", 12) == 0) {
-            cmd_get_by_year(rlist, line);
-        }
-        else if (strncmp(line, "get_list_ordered_by_year", 24) == 0) {
-            cmd_get_list_ordered_by_year(rlist);
-        }
-        else if (strncmp(line, "get_model_list", 14) == 0) {
-            cmd_get_model_list(rlist);
-        }
-        else if (strncmp(line, "size", 4) == 0) {
-            cmd_size(rlist);
-        }
-        else {
-            printf("Comando inválido. Escreve 'help' para ajuda.\n");
-        }
+        if (strlen(line) == 0) continue;
+        if (strcmp(line, "quit") == 0) break;
+        if (strcmp(line, "help") == 0) print_help();
+        else if (strncmp(line, "add ", 4) == 0) cmd_add(rlist, line);
+        else if (strncmp(line, "remove ", 7) == 0) cmd_remove(rlist, line);
+        else if (strncmp(line, "get_by_marca ", 13) == 0) cmd_get_by_marca(rlist, line);
+        else if (strncmp(line, "get_by_year ", 12) == 0) cmd_get_by_year(rlist, line);
+        else if (strcmp(line, "get_list_ordered_by_year") == 0) cmd_get_list_ordered_by_year(rlist);
+        else if (strcmp(line, "get_model_list") == 0) cmd_get_model_list(rlist);
+        else if (strcmp(line, "size") == 0) cmd_size(rlist);
+        else printf("Comando inválido. Escreve 'help' para ajuda.\n");
     }
 
     rlist_disconnect(rlist);
-
     return 0;
 }

@@ -14,6 +14,13 @@
 #include <string.h>
 #include <stdio.h>
 
+static int validate_response(MessageT *response, MessageT__Opcode expected_opcode, MessageT__CType expected_ctype) {
+    if (response == NULL) {
+        return 0;
+    }
+    return (response->opcode == expected_opcode && response->c_type == expected_ctype);
+}
+
 struct rlist_t *rlist_connect(char *address_port) {
     if (address_port == NULL) {
         return NULL;
@@ -89,8 +96,7 @@ int rlist_add(struct rlist_t *rlist, struct data_t *car) {
         return -1;
     }
 
-    int result = (response->opcode == MESSAGE_T__OPCODE__OP_ADD + 1 &&
-                  response->c_type == MESSAGE_T__C_TYPE__CT_NONE) ? 0 : -1;
+    int result = validate_response(response, MESSAGE_T__OPCODE__OP_ADD + 1, MESSAGE_T__C_TYPE__CT_NONE) ? 0 : -1;
 
     message_t__free_unpacked(response, NULL);
     return result;
@@ -134,8 +140,7 @@ struct data_t *rlist_get_by_marca(struct rlist_t *rlist, enum marca_t marca) {
     }
 
     struct data_t *car = NULL;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_GET + 1 &&
-        response->c_type == MESSAGE_T__C_TYPE__CT_DATA &&
+    if (validate_response(response, MESSAGE_T__OPCODE__OP_GET + 1, MESSAGE_T__C_TYPE__CT_DATA) && 
         response->data != NULL) {
         car = data_create(response->data->ano, response->data->preco,
                          (enum marca_t)response->data->marca, response->data->modelo,
@@ -161,8 +166,7 @@ struct data_t **rlist_get_by_year(struct rlist_t *rlist, int ano) {
         return NULL;
     }
 
-    if (response->opcode != MESSAGE_T__OPCODE__OP_GETLISTBYTEAR + 1 || 
-        response->c_type != MESSAGE_T__C_TYPE__CT_LIST ||
+    if (!validate_response(response, MESSAGE_T__OPCODE__OP_GETLISTBYTEAR + 1, MESSAGE_T__C_TYPE__CT_LIST) ||
         response->n_cars == 0 || response->cars == NULL) {
         message_t__free_unpacked(response, NULL);
         return NULL;
@@ -215,8 +219,7 @@ int rlist_order_by_year(struct rlist_t *rlist) {
         return -1;
     }
 
-    int result = (response->opcode == MESSAGE_T__OPCODE__OP_GETLISTBYTEAR + 1 &&
-                  response->c_type == MESSAGE_T__C_TYPE__CT_LIST) ? 0 : -1;
+    int result = validate_response(response, MESSAGE_T__OPCODE__OP_GETLISTBYTEAR + 1, MESSAGE_T__C_TYPE__CT_LIST) ? 0 : -1;
 
     message_t__free_unpacked(response, NULL);
     return result;
@@ -236,8 +239,7 @@ int rlist_size(struct rlist_t *rlist) {
         return -1;
     }
 
-    int result = (response->opcode == MESSAGE_T__OPCODE__OP_SIZE + 1 &&
-                  response->c_type == MESSAGE_T__C_TYPE__CT_RESULT)
+    int result = validate_response(response, MESSAGE_T__OPCODE__OP_SIZE + 1, MESSAGE_T__C_TYPE__CT_RESULT)
                   ? response->result : -1;
 
     message_t__free_unpacked(response, NULL);
@@ -259,8 +261,7 @@ char **rlist_get_model_list(struct rlist_t *rlist) {
     }
 
     char **models = NULL;
-    if (response->opcode == MESSAGE_T__OPCODE__OP_GETMODELS + 1 &&
-        response->c_type == MESSAGE_T__C_TYPE__CT_MODEL) {
+    if (validate_response(response, MESSAGE_T__OPCODE__OP_GETMODELS + 1, MESSAGE_T__C_TYPE__CT_MODEL)) {
         models = malloc((response->n_models + 1) * sizeof(char *));
         if (models != NULL) {
             size_t i;

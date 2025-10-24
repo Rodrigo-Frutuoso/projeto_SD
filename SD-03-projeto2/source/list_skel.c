@@ -12,6 +12,26 @@
 #include "sdmessage.pb-c.h"
 #include <stdlib.h>
 
+static Data *create_data_message(struct data_t *car) {
+    if (car == NULL) {
+        return NULL;
+    }
+    
+    Data *data = malloc(sizeof(Data));
+    if (data == NULL) {
+        return NULL;
+    }
+    
+    data__init(data);
+    data->ano = car->ano;
+    data->preco = car->preco;
+    data->marca = (Marca)car->marca;
+    data->modelo = strdup(car->modelo);
+    data->combustivel = (Combustivel)car->combustivel;
+    
+    return data;
+}
+
 struct list_t *list_skel_init() {
     struct list_t *list = list_create();
     if(list == NULL){
@@ -67,15 +87,7 @@ int invoke(MessageT *msg, struct list_t *list) {
 
                     if (car != NULL) {
                         msg->c_type = MESSAGE_T__C_TYPE__CT_DATA;
-                        msg->data = malloc(sizeof(Data));
-                        if (msg->data != NULL) {
-                            data__init(msg->data);
-                            msg->data->ano = car->ano;
-                            msg->data->preco = car->preco;
-                            msg->data->marca = (Marca)car->marca;
-                            msg->data->modelo = strdup(car->modelo);
-                            msg->data->combustivel = (Combustivel)car->combustivel;
-                        }
+                        msg->data = create_data_message(car);
                     } else {
                         msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                         msg->data = NULL;
@@ -96,15 +108,7 @@ int invoke(MessageT *msg, struct list_t *list) {
 
                         if (msg->cars != NULL) {
                             for (int i = 0; i < count; i++) {
-                                msg->cars[i] = malloc(sizeof(Data));
-                                if (msg->cars[i] != NULL) {
-                                    data__init(msg->cars[i]);
-                                    msg->cars[i]->ano = cars[i]->ano;
-                                    msg->cars[i]->preco = cars[i]->preco;
-                                    msg->cars[i]->marca = (Marca)cars[i]->marca;
-                                    msg->cars[i]->modelo = strdup(cars[i]->modelo);
-                                    msg->cars[i]->combustivel = (Combustivel)cars[i]->combustivel;
-                                }
+                                msg->cars[i] = create_data_message(cars[i]);
                             }
                         }
                         free(cars);
@@ -210,15 +214,7 @@ int invoke(MessageT *msg, struct list_t *list) {
 
                 if (msg->cars != NULL) {
                     for (int i = 0; i < count; i++) {
-                        msg->cars[i] = malloc(sizeof(Data));
-                        if (msg->cars[i] != NULL) {
-                            data__init(msg->cars[i]);
-                            msg->cars[i]->ano = cars[i]->ano;
-                            msg->cars[i]->preco = cars[i]->preco;
-                            msg->cars[i]->marca = (Marca)cars[i]->marca;
-                            msg->cars[i]->modelo = strdup(cars[i]->modelo);
-                            msg->cars[i]->combustivel = (Combustivel)cars[i]->combustivel;
-                        }
+                        msg->cars[i] = create_data_message(cars[i]);
                     }
                 }
                 free(cars);
