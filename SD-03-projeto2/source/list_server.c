@@ -11,6 +11,11 @@
 #include <stdlib.h>
 #include <signal.h>
 
+static void sigint_handler(int sig) {
+    (void)sig;
+    network_server_request_shutdown();
+}
+
 int main(int argc, char **argv) {
     struct list_t *list;
     int listening_socket;
@@ -28,7 +33,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    signal(SIGPIPE, SIG_IGN);
+    signal(SIGINT, sigint_handler);
 
     list = list_skel_init();
     if (list == NULL) {
@@ -48,11 +53,14 @@ int main(int argc, char **argv) {
     if (network_main_loop(listening_socket, list) < 0) {
         fprintf(stderr, "Erro no loop principal do servidor\n");
     }
-
-    printf("Fechas\n");
-
-    network_server_close(listening_socket);
-    list_skel_destroy(list);
+    
+    if (listening_socket >= 0) {
+        network_server_close(listening_socket);
+    }
+    
+    if (list != NULL) {
+        list_skel_destroy(list);
+    }
 
     return 0;
 }

@@ -22,6 +22,7 @@
 #include <stdint.h>
 
 static int server_sockfd = -1;
+static int shutdown_requested = 0;
 
 int network_server_init(short port) { //SLIDES +6  TP4. Sockets
     int sockfd;
@@ -66,10 +67,11 @@ int network_main_loop(int listening_socket, struct list_t *list) {
     socklen_t size_client = sizeof(struct sockaddr_in);
     int connsockfd;
 
-    while ((connsockfd = accept(listening_socket, (struct sockaddr *)&client, &size_client)) != -1) {
+    while (!shutdown_requested && 
+           (connsockfd = accept(listening_socket, (struct sockaddr *)&client, &size_client)) != -1) {
         printf("Connection established!\n");
         
-        while (1) {
+        while (!shutdown_requested) {
             MessageT *msg = network_receive(connsockfd);
             if (msg == NULL) {
                 break;
@@ -90,7 +92,14 @@ int network_main_loop(int listening_socket, struct list_t *list) {
 
         close(connsockfd);
         printf("Connection closed!\n");
-        printf("Server ready, waiting for connections\n");
+        
+        if (!shutdown_requested) {
+            printf("Server ready, waiting for connections\n");
+        }
+    }
+    
+    if (shutdown_requested) {
+        return 0;
     }
 
     return -1;
@@ -176,6 +185,8 @@ int network_server_close(int socket) {
 }
 
 void network_server_request_shutdown(void) {
+    shutdown_requested = 1;
+    
     if (server_sockfd >= 0) {
         close(server_sockfd);
         server_sockfd = -1;
