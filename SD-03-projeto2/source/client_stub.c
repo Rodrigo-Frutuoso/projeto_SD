@@ -113,8 +113,9 @@ int rlist_remove_by_model(struct rlist_t *rlist, const char *modelo) {
         return -1;
     }
     
+    int result = response->result;
     message_t__free_unpacked(response, NULL);
-    return response->result;
+    return result;
 }
 
 struct data_t *rlist_get_by_marca(struct rlist_t *rlist, enum marca_t marca) {

@@ -54,8 +54,7 @@ static void cmd_add(struct rlist_t *rlist, char *line) {
     char modelo[100];
 
     if (sscanf(line, "add %s %d %f %d %d", modelo, &ano, &preco, &marca_num, &combustivel_num) != 5) {
-        printf("Erro: Utilização correta: add <modelo> <ano> <preco> <marca:0-4> <combustivel:0-3>\n");
-        printf("Exemplo: add Corolla 2020 25000.50 0 0\n");
+        printf("Uso: add <modelo> <ano> <preco> <marca:0-4> <combustivel:0-3>\n");
         return;
     }
 
@@ -81,8 +80,7 @@ static void cmd_remove(struct rlist_t *rlist, char *line) {
     char modelo[100];
 
     if (sscanf(line, "remove %s", modelo) != 1) {
-        printf("Erro: Utilização correta: remove <modelo>\n");
-        printf("Exemplo: remove Corolla\n");
+        printf("Uso: remove <modelo>\n");
         return;
     }
 
@@ -98,8 +96,7 @@ static void cmd_get_by_marca(struct rlist_t *rlist, char *line) {
     int marca_num;
 
     if (sscanf(line, "get_by_marca %d", &marca_num) != 1) {
-        printf("Erro: Utilização correta: get_by_marca <marca:0-4>\n");
-        printf("Exemplo: get_by_marca 0\n");
+        printf("Uso: get_by_marca <marca:0-4>\n");
         return;
     }
 
@@ -118,15 +115,14 @@ static void cmd_get_by_year(struct rlist_t *rlist, char *line) {
     int ano;
 
     if (sscanf(line, "get_by_year %d", &ano) != 1) {
-        printf("Erro: Utilização correta: get_by_year <ano>\n");
-        printf("Exemplo: get_by_year 2020\n");
+        printf("Uso: get_by_year <ano>\n");
         return;
     }
 
     struct data_t **cars = rlist_get_by_year(rlist, ano);
 
     if (cars == NULL) {
-        printf("Erro ao obter carros.\n");
+        printf("Nenhum carro encontrado para o ano especificado.\n");
         return;
     }
 
@@ -138,7 +134,7 @@ static void cmd_get_by_year(struct rlist_t *rlist, char *line) {
     }
 
     if (count == 0) {
-        printf("Nenhum carro encontrado para o ano %d.\n", ano);
+        printf("Nenhum carro encontrado para o ano especificado.\n");
     }
 
     free(cars);
@@ -177,10 +173,6 @@ static void cmd_get_model_list(struct rlist_t *rlist) {
     while (models[count] != NULL) {
         printf("Modelo: %s\n", models[count]);
         count++;
-    }
-
-    if (count == 0) {
-        printf("Lista vazia.\n");
     }
 
     rlist_free_model_list(models);
@@ -272,13 +264,13 @@ int main(int argc, char **argv) {
         else if (strncmp(line, "get_by_year ", 12) == 0) {
             cmd_get_by_year(rlist, line);
         }
-        else if (strcmp(line, "get_list_ordered_by_year") == 0) {
+        else if (strncmp(line, "get_list_ordered_by_year", 24) == 0) {
             cmd_get_list_ordered_by_year(rlist);
         }
-        else if (strcmp(line, "get_model_list") == 0) {
+        else if (strncmp(line, "get_model_list", 14) == 0) {
             cmd_get_model_list(rlist);
         }
-        else if (strcmp(line, "size") == 0) {
+        else if (strncmp(line, "size", 4) == 0) {
             cmd_size(rlist);
         }
         else {
