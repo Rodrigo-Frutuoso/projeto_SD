@@ -144,9 +144,9 @@ O Makefile inclui os seguintes targets:
 ### Exemplos de uso
 ```
 add Corolla 2020 25000.50 0 0
-remove Corolla
-get_by_marca 1
+get_by_marca 0
 get_by_year 2020
+remove Corolla
 size
 quit
 ```
