@@ -5,7 +5,7 @@
 
 CC = gcc
 CFLAGS = -Wall -Wextra -g -Iinclude
-LDFLAGS = -lprotobuf-c
+LDFLAGS = -lprotobuf-c -lpthread
 
 SRCDIR = source
 OBJDIR = object

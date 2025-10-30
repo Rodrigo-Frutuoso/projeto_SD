@@ -52,6 +52,53 @@ int network_connect(struct rlist_t *rlist) { //SLIDES +11  TP4. Sockets
 
     freeaddrinfo(result);
     rlist->sockfd = sockfd;
+
+    /* Receber mensagem de estado do servidor (OP_READY ou OP_BUSY) */
+    uint16_t response_size_net;
+
+    if (read_all(rlist->sockfd, &response_size_net, sizeof(uint16_t)) != sizeof(uint16_t)) {
+        close(sockfd);
+        rlist->sockfd = -1;
+        return -1;
+    }
+
+    uint16_t response_size_host = ntohs(response_size_net);
+    uint32_t response_size = response_size_host;
+
+    uint8_t *response_buffer = malloc(response_size);
+    if (response_buffer == NULL) {
+        close(sockfd);
+        rlist->sockfd = -1;
+        return -1;
+    }
+
+    if (read_all(rlist->sockfd, response_buffer, response_size) != (int)response_size) {
+        free(response_buffer);
+        close(sockfd);
+        rlist->sockfd = -1;
+        return -1;
+    }
+
+    MessageT *response = message_t__unpack(NULL, response_size, response_buffer);
+    free(response_buffer);
+
+    if (response == NULL) {
+        close(sockfd);
+        rlist->sockfd = -1;
+        return -1;
+    }
+
+    /* Verificar se servidor está disponível */
+    if (response->opcode == MESSAGE_T__OPCODE__OP_BUSY) {
+        printf("Server busy. Try again later.\n");
+        message_t__free_unpacked(response, NULL);
+        close(sockfd);
+        rlist->sockfd = -1;
+        return -1;
+    }
+
+    message_t__free_unpacked(response, NULL);
+
     return 0;
 }
 
@@ -82,11 +129,11 @@ MessageT *network_send_receive(struct rlist_t *rlist, MessageT *msg) {
     free(buffer);
 
     uint16_t response_size_net;
-    
+
     if (read_all(rlist->sockfd, &response_size_net, sizeof(uint16_t)) != sizeof(uint16_t)) {
         return NULL;
     }
-    
+
     uint16_t response_size_host = ntohs(response_size_net);
     uint32_t response_size = response_size_host;
 

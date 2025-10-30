@@ -1,0 +1,178 @@
+/**
+ * Grupo 03
+ * Rodrigo Frutuoso - 61865
+ * Simão Alexandre - 61874
+ * Tiago Leite - 61863
+ */
+
+INSTRUÇÕES DE TESTE - FASE 3
+=============================
+
+Este documento explica como testar todas as funcionalidades da Fase 3.
+
+1. COMPILAÇÃO
+-------------
+make clean
+make
+
+Resultado esperado:
+- ✅ Compilação concluída com sucesso!
+- Executáveis criados em binary/
+
+
+2. TESTE BÁSICO - SERVIDOR ACEITA CLIENTE
+------------------------------------------
+Terminal 1:
+    ./binary/list_server 12345
+
+Terminal 2:
+    ./binary/list_client 127.0.0.1:12345
+    > size
+    > quit
+
+Resultado esperado:
+- Cliente conecta com sucesso
+- Mensagem no servidor: "Connection established with 127.0.0.1:XXXX"
+- Ficheiro server.log criado com entradas CONNECT, REQUEST, CLOSE
+
+
+3. TESTE MULTI-THREADING - MÚLTIPLOS CLIENTES
+----------------------------------------------
+Terminal 1:
+    ./binary/list_server 12345
+
+Terminais 2, 3, 4 (simultâneos):
+    ./binary/list_client 127.0.0.1:12345
+    > add Corolla 2020 25000 0 0
+    > size
+    (deixar aberto, não fazer quit)
+
+Resultado esperado:
+- Servidor mostra 3 conexões estabelecidas
+- Todos os clientes conseguem adicionar e consultar
+- server.log tem 3 entradas CONNECT
+
+
+4. TESTE LIMITE DE CLIENTES - REJEIÇÃO DO 6º CLIENTE
+-----------------------------------------------------
+Terminal 1:
+    ./binary/list_server 12345
+
+Terminais 2-6 (abrir 5 clientes):
+    ./binary/list_client 127.0.0.1:12345
+    (deixar todos abertos)
+
+Terminal 7 (tentar 6º cliente):
+    ./binary/list_client 127.0.0.1:12345
+
+Resultado esperado:
+- Primeiros 5 clientes conectam com sucesso
+- 6º cliente mostra: "Server busy. Try again later."
+- Servidor mostra: "Connection rejected from 127.0.0.1:XXXX - Server busy"
+
+
+5. ANÁLISE DO FICHEIRO server.log
+----------------------------------
+Após testes, verificar conteúdo do log:
+
+cat server.log
+
+Formato esperado de cada linha:
+    <timestamp> <IP:porta> CONNECT
+    <timestamp> <IP:porta> REQUEST OP_XXX CT_XXX [argumentos]
+    <timestamp> <IP:porta> CLOSE
+
+Comandos úteis:
+
+# Contar conexões
+cat server.log | grep CONNECT | wc -l
+
+# Contar pedidos
+cat server.log | grep REQUEST | wc -l
+
+# Ver clientes únicos
+cat server.log | awk '{print $2}' | sort | uniq
+
+# Pedidos por cliente
+for c in `cat server.log | awk '{print $2}' | sort | uniq`; do
+    n=`cat server.log | grep $c | grep REQUEST | wc -l`
+    echo "$c: $n pedidos"
+done
+
+
+6. TESTE AUTOMÁTICO (OPCIONAL)
+-------------------------------
+Executar o script de teste fornecido:
+
+    ./test_completo.sh
+
+Este script testa automaticamente:
+- Criação do ficheiro de log
+- Múltiplos clientes simultâneos
+- Limite de 5 clientes
+- Rejeição do 6º cliente
+
+
+7. VERIFICAR AUSÊNCIA DE MEMORY LEAKS (OPCIONAL)
+-------------------------------------------------
+Requer valgrind instalado:
+
+Terminal 1:
+    valgrind --leak-check=full ./binary/list_server 12345
+
+Terminal 2:
+    ./binary/list_client 127.0.0.1:12345
+    > add Corolla 2020 25000 0 0
+    > size
+    > quit
+
+Depois, terminar servidor (Ctrl+C) e verificar output do valgrind.
+
+Resultado esperado:
+- "All heap blocks were freed -- no leaks are possible"
+
+
+8. VERIFICAR AUSÊNCIA DE RACE CONDITIONS (OPCIONAL)
+----------------------------------------------------
+Requer valgrind com helgrind:
+
+Terminal 1:
+    valgrind --tool=helgrind ./binary/list_server 12345
+
+Terminais 2-4 (simultâneos):
+    ./binary/list_client 127.0.0.1:12345
+    > add Civic 2021 28000 1 0
+    > size
+    > quit
+
+Resultado esperado:
+- Nenhum erro de race condition reportado
+
+
+CHECKLIST FINAL
+---------------
+✅ Servidor compila sem erros
+✅ Cliente compila sem erros
+✅ Servidor aceita cliente e cria server.log
+✅ Servidor aceita múltiplos clientes (até 5)
+✅ 6º cliente é rejeitado com "Server busy. Try again later."
+✅ server.log contém CONNECT, REQUEST, CLOSE corretamente
+✅ Timestamps no log estão corretos
+✅ Todas as operações da Fase 2 continuam a funcionar
+✅ Sem memory leaks (valgrind)
+✅ Sem race conditions (helgrind)
+
+
+RESOLUÇÃO DE PROBLEMAS
+-----------------------
+Problema: "Address already in use"
+Solução: Aguardar ~1 minuto ou usar outra porta
+
+Problema: Cliente não conecta
+Solução: Verificar se servidor está a correr (ps aux | grep list_server)
+
+Problema: server.log não é criado
+Solução: Verificar permissões da diretoria atual (ls -la)
+
+Problema: Servidor não aceita mais clientes
+Solução: Fechar clientes antigos ou aguardar timeout
