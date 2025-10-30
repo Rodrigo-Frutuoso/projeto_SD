@@ -48,16 +48,14 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    printf("Server ready, waiting for connections\n");
-
     if (network_main_loop(listening_socket, list) < 0) {
         fprintf(stderr, "Erro no loop principal do servidor\n");
     }
-    
+
     if (listening_socket >= 0) {
         network_server_close(listening_socket);
     }
-    
+
     if (list != NULL) {
         list_skel_destroy(list);
     }

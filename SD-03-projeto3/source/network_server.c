@@ -27,7 +27,6 @@
 #define MAX_CLIENTS 5
 #define LOG_FILE "server.log"
 
-/* Estrutura para passar argumentos às threads */
 typedef struct {
     int client_socket;
     struct list_t *list;
@@ -35,25 +34,21 @@ typedef struct {
     int client_port;
 } thread_args_t;
 
-/* Variáveis globais */
 static int server_sockfd = -1;
 static int shutdown_requested = 0;
 static int num_clientes_ativos = 0;
 static FILE *log_file = NULL;
 
-/* Mutexes */
 static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-/* Função para obter timestamp atual em segundos */
 static long get_timestamp() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return tv.tv_sec;
 }
 
-/* Função para converter opcode em string */
 static const char* opcode_to_string(MessageT__Opcode opcode) {
     switch(opcode) {
         case MESSAGE_T__OPCODE__OP_ADD: return "OP_ADD";
@@ -70,7 +65,6 @@ static const char* opcode_to_string(MessageT__Opcode opcode) {
     }
 }
 
-/* Função para converter c_type em string */
 static const char* ctype_to_string(MessageT__CType c_type) {
     switch(c_type) {
         case MESSAGE_T__C_TYPE__CT_DATA: return "CT_DATA";
@@ -84,7 +78,6 @@ static const char* ctype_to_string(MessageT__CType c_type) {
     }
 }
 
-/* Registar CONNECT no log */
 static void log_connect(const char *client_addr, int client_port) {
     pthread_mutex_lock(&log_mutex);
     if (log_file != NULL) {
@@ -95,7 +88,6 @@ static void log_connect(const char *client_addr, int client_port) {
     pthread_mutex_unlock(&log_mutex);
 }
 
-/* Registar CLOSE no log */
 static void log_close(const char *client_addr, int client_port) {
     pthread_mutex_lock(&log_mutex);
     if (log_file != NULL) {
@@ -106,7 +98,6 @@ static void log_close(const char *client_addr, int client_port) {
     pthread_mutex_unlock(&log_mutex);
 }
 
-/* Registar REQUEST no log */
 static void log_request(const char *client_addr, int client_port, MessageT *msg) {
     pthread_mutex_lock(&log_mutex);
     if (log_file != NULL && msg != NULL) {
@@ -116,9 +107,7 @@ static void log_request(const char *client_addr, int client_port, MessageT *msg)
                 opcode_to_string(msg->opcode),
                 ctype_to_string(msg->c_type));
 
-        /* Adicionar argumentos específicos conforme o tipo de pedido */
         if (msg->c_type == MESSAGE_T__C_TYPE__CT_DATA && msg->data != NULL) {
-            /* Para OP_ADD: mostrar marca, modelo e ano */
             const char *marca_str = "";
             switch(msg->data->marca) {
                 case MARCA__MARCA_TOYOTA: marca_str = "Toyota"; break;
@@ -146,12 +135,10 @@ static void log_request(const char *client_addr, int client_port, MessageT *msg)
     pthread_mutex_unlock(&log_mutex);
 }
 
-/* Obter mutex da lista (para uso em list_skel.c) */
 pthread_mutex_t* get_list_mutex() {
     return &list_mutex;
 }
 
-/* Função executada pelas threads secundárias para atender cada cliente */
 void *client_handler(void *args) {
     thread_args_t *targs = (thread_args_t *)args;
     int connsockfd = targs->client_socket;
@@ -162,17 +149,14 @@ void *client_handler(void *args) {
     strcpy(client_addr, targs->client_addr);
     free(targs);
 
-    /* Loop de atendimento do cliente */
     while (!shutdown_requested) {
         MessageT *msg = network_receive(connsockfd);
         if (msg == NULL) {
             break;
         }
 
-        /* Registar REQUEST no log */
         log_request(client_addr, client_port, msg);
 
-        /* Proteger acesso à lista com mutex */
         pthread_mutex_lock(&list_mutex);
         if (invoke(msg, list) < 0) {
             msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
@@ -190,10 +174,8 @@ void *client_handler(void *args) {
 
     close(connsockfd);
 
-    /* Registar CLOSE no log */
     log_close(client_addr, client_port);
 
-    /* Decrementar número de clientes ativos */
     pthread_mutex_lock(&clients_mutex);
     num_clientes_ativos--;
     pthread_mutex_unlock(&clients_mutex);
@@ -206,7 +188,6 @@ int network_server_init(short port) { //SLIDES +6  TP4. Sockets
     struct sockaddr_in server;
     int reuse = 1;
 
-    /* Abrir ficheiro de log */
     log_file = fopen(LOG_FILE, "a");
     if (log_file == NULL) {
         perror("Erro ao abrir ficheiro de log");
@@ -264,18 +245,15 @@ int network_main_loop(int listening_socket, struct list_t *list) {
     while (!shutdown_requested &&
            (connsockfd = accept(listening_socket, (struct sockaddr *)&client, &size_client)) != -1) {
 
-        /* Obter endereço e porto do cliente */
         char client_addr[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &(client.sin_addr), client_addr, INET_ADDRSTRLEN);
         int client_port = ntohs(client.sin_port);
 
-        /* Verificar número de clientes ativos */
         pthread_mutex_lock(&clients_mutex);
         int can_accept = (num_clientes_ativos < MAX_CLIENTS);
         pthread_mutex_unlock(&clients_mutex);
 
         if (can_accept) {
-            /* Enviar mensagem OP_READY */
             MessageT msg = MESSAGE_T__INIT;
             msg.opcode = MESSAGE_T__OPCODE__OP_READY;
             msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
@@ -285,18 +263,15 @@ int network_main_loop(int listening_socket, struct list_t *list) {
                 continue;
             }
 
-            /* Incrementar número de clientes ativos */
             pthread_mutex_lock(&clients_mutex);
             num_clientes_ativos++;
             pthread_mutex_unlock(&clients_mutex);
 
-            /* Registar CONNECT no log */
             log_connect(client_addr, client_port);
 
             printf("Connection established with %s:%d (Total clients: %d)\n",
                    client_addr, client_port, num_clientes_ativos);
 
-            /* Criar estrutura de argumentos para a thread */
             thread_args_t *targs = malloc(sizeof(thread_args_t));
             if (targs == NULL) {
                 close(connsockfd);
@@ -311,7 +286,6 @@ int network_main_loop(int listening_socket, struct list_t *list) {
             strcpy(targs->client_addr, client_addr);
             targs->client_port = client_port;
 
-            /* Criar thread para atender o cliente */
             pthread_t thread_id;
             if (pthread_create(&thread_id, NULL, client_handler, targs) != 0) {
                 free(targs);
@@ -322,11 +296,9 @@ int network_main_loop(int listening_socket, struct list_t *list) {
                 continue;
             }
 
-            /* Detach thread para libertar recursos automaticamente */
             pthread_detach(thread_id);
 
         } else {
-            /* Enviar mensagem OP_BUSY e rejeitar ligação */
             MessageT msg = MESSAGE_T__INIT;
             msg.opcode = MESSAGE_T__OPCODE__OP_BUSY;
             msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
@@ -421,13 +393,11 @@ int network_server_close(int socket) {
         return -1;
     }
 
-    /* Fechar ficheiro de log */
     if (log_file != NULL) {
         fclose(log_file);
         log_file = NULL;
     }
 
-    /* Destruir mutexes */
     pthread_mutex_destroy(&log_mutex);
     pthread_mutex_destroy(&clients_mutex);
     pthread_mutex_destroy(&list_mutex);

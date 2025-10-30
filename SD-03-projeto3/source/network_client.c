@@ -53,7 +53,6 @@ int network_connect(struct rlist_t *rlist) { //SLIDES +11  TP4. Sockets
     freeaddrinfo(result);
     rlist->sockfd = sockfd;
 
-    /* Receber mensagem de estado do servidor (OP_READY ou OP_BUSY) */
     uint16_t response_size_net;
 
     if (read_all(rlist->sockfd, &response_size_net, sizeof(uint16_t)) != sizeof(uint16_t)) {
@@ -88,7 +87,6 @@ int network_connect(struct rlist_t *rlist) { //SLIDES +11  TP4. Sockets
         return -1;
     }
 
-    /* Verificar se servidor está disponível */
     if (response->opcode == MESSAGE_T__OPCODE__OP_BUSY) {
         printf("Server busy. Try again later.\n");
         message_t__free_unpacked(response, NULL);

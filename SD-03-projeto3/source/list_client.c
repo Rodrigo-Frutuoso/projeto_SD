@@ -145,13 +145,13 @@ static void cmd_get_list_ordered_by_year(struct rlist_t *rlist) {
         printf("Erro ao ordenar a lista por cada ano.\n");
         return;
     }
-    
+
     struct data_t **cars = rlist_get_by_year(rlist, -1);
     if (cars == NULL) {
         printf("Erro ao obter os carros por cada ano.\n");
         return;
     }
-    
+
     int i = 0;
     while (cars[i] != NULL) {
         print_car(cars[i]);
@@ -216,19 +216,18 @@ int main(int argc, char **argv) {
     rlist = rlist_connect(argv[1]);
 
     if (rlist == NULL) {
-        fprintf(stderr, "Erro ao conectar ao servidor %s\n", argv[1]);
         return -1;
     }
 
     char address_copy[256];
     strncpy(address_copy, argv[1], sizeof(address_copy) - 1);
     address_copy[sizeof(address_copy) - 1] = '\0';
-    
+
     char *colon = strchr(address_copy, ':');
     if (colon != NULL) {
         *colon = '\0';
     }
-    
+
     printf("Ligado a %s\n", address_copy);
     print_help();
 

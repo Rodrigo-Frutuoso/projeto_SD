@@ -9,10 +9,7 @@
 
 #include <pthread.h>
 
-/* Função executada pelas threads secundárias para atender cada cliente */
 void *client_handler(void *args);
-
-/* Função para obter o mutex da lista (usado em list_skel.c) */
 pthread_mutex_t* get_list_mutex();
 
 #endif
