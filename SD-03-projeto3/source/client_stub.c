@@ -14,6 +14,11 @@
 #include <string.h>
 #include <stdio.h>
 
+int rlist_get_sockfd(struct rlist_t *rlist) {
+    if (rlist == NULL) return -1;
+    return rlist->sockfd;
+}
+
 static int validate_response(MessageT *response, MessageT__Opcode expected_opcode, MessageT__CType expected_ctype) {
     if (response == NULL) {
         return 0;

@@ -39,6 +39,9 @@ static int shutdown_requested = 0;
 static int num_clientes_ativos = 0;
 static FILE *log_file = NULL;
 
+static int client_sockets[MAX_CLIENTS];
+static pthread_mutex_t sockets_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t list_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -156,6 +159,15 @@ void *client_handler(void *args) {
     strcpy(client_addr, targs->client_addr);
     free(targs);
 
+    pthread_mutex_lock(&sockets_mutex);
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (client_sockets[i] == -1) {
+            client_sockets[i] = connsockfd;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&sockets_mutex);
+
     while (!shutdown_requested) {
         MessageT *msg = network_receive(connsockfd);
         if (msg == NULL) {
@@ -181,6 +193,15 @@ void *client_handler(void *args) {
 
     close(connsockfd);
 
+    pthread_mutex_lock(&sockets_mutex);
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (client_sockets[i] == connsockfd) {
+            client_sockets[i] = -1;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&sockets_mutex);
+
     log_close(client_addr, client_port);
 
     pthread_mutex_lock(&clients_mutex);
@@ -198,6 +219,10 @@ int network_server_init(short port) { //SLIDES +6  TP4. Sockets
     int sockfd;
     struct sockaddr_in server;
     int reuse = 1;
+
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        client_sockets[i] = -1;
+    }
 
     log_file = fopen(LOG_FILE, "a");
     if (log_file == NULL) {
@@ -412,6 +437,7 @@ int network_server_close(int socket) {
     pthread_mutex_destroy(&log_mutex);
     pthread_mutex_destroy(&clients_mutex);
     pthread_mutex_destroy(&list_mutex);
+    pthread_mutex_destroy(&sockets_mutex);
 
     server_sockfd = -1;
     return 0;
@@ -424,4 +450,12 @@ void network_server_request_shutdown(void) {
         close(server_sockfd);
         server_sockfd = -1;
     }
+
+    pthread_mutex_lock(&sockets_mutex);
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (client_sockets[i] != -1) {
+            shutdown(client_sockets[i], SHUT_RDWR);
+        }
+    }
+    pthread_mutex_unlock(&sockets_mutex);
 }

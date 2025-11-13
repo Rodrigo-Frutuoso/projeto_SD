@@ -6,13 +6,51 @@
  */
 
 #include "client_stub.h"
+#include "client_stub-private.h"
 #include "data.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <poll.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 
 #define MAX_LINE 1024
+
+static int connection_lost = 0;
+
+static int check_connection(int sockfd) {
+    struct pollfd pfd;
+    pfd.fd = sockfd;
+    pfd.events = POLLIN;
+    
+    int ret = poll(&pfd, 1, 0);
+    
+    if (ret < 0) {
+        return 0;
+    }
+    
+    if (pfd.revents & (POLLHUP | POLLERR | POLLNVAL)) {
+        return 0;
+    }
+    
+    if (pfd.revents & POLLIN) {
+        char buf[1];
+        ssize_t n = recv(sockfd, buf, sizeof(buf), MSG_PEEK | MSG_DONTWAIT);
+        
+        if (n == 0) {
+            return 0;
+        }
+        if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            return 0;
+        }
+    }
+    
+    return 1;
+}
 
 static enum marca_t parse_marca(int marca_num) {
     switch (marca_num) {
@@ -71,6 +109,7 @@ static void cmd_add(struct rlist_t *rlist, char *line) {
         printf("Carro adicionado com sucesso.\n");
     } else {
         printf("Erro ao adicionar carro.\n");
+        connection_lost = 1;
     }
 
     data_destroy(car);
@@ -87,8 +126,11 @@ static void cmd_remove(struct rlist_t *rlist, char *line) {
     int result = rlist_remove_by_model(rlist, modelo);
     if (result == 0) {
         printf("Carro removido.\n");
-    } else {
+    } else if (result == 1) {
         printf("Carro não encontrado.\n");
+    } else {
+        printf("Erro de conexão.\n");
+        connection_lost = 1;
     }
 }
 
@@ -108,6 +150,7 @@ static void cmd_get_by_marca(struct rlist_t *rlist, char *line) {
         data_destroy(car);
     } else {
         printf("Carro não encontrado.\n");
+        connection_lost = 1;
     }
 }
 
@@ -122,7 +165,8 @@ static void cmd_get_by_year(struct rlist_t *rlist, char *line) {
     struct data_t **cars = rlist_get_by_year(rlist, ano);
 
     if (cars == NULL) {
-        printf("Nenhum carro encontrado para o ano especificado.\n");
+        printf("Erro de conexão.\n");
+        connection_lost = 1;
         return;
     }
 
@@ -142,13 +186,15 @@ static void cmd_get_by_year(struct rlist_t *rlist, char *line) {
 
 static void cmd_get_list_ordered_by_year(struct rlist_t *rlist) {
     if (rlist_order_by_year(rlist) != 0) {
-        printf("Erro ao ordenar a lista por cada ano.\n");
+        printf("Erro de conexão.\n");
+        connection_lost = 1;
         return;
     }
 
     struct data_t **cars = rlist_get_by_year(rlist, -1);
     if (cars == NULL) {
-        printf("Erro ao obter os carros por cada ano.\n");
+        printf("Erro de conexão.\n");
+        connection_lost = 1;
         return;
     }
 
@@ -165,7 +211,8 @@ static void cmd_get_model_list(struct rlist_t *rlist) {
     char **models = rlist_get_model_list(rlist);
 
     if (models == NULL) {
-        printf("Erro ao obter lista de modelos.\n");
+        printf("Erro de conexão.\n");
+        connection_lost = 1;
         return;
     }
 
@@ -184,7 +231,8 @@ static void cmd_size(struct rlist_t *rlist) {
     if (size >= 0) {
         printf("List size: %d\n", size);
     } else {
-        printf("Erro ao obter tamanho da lista.\n");
+        printf("Erro de conexão.\n");
+        connection_lost = 1;
     }
 }
 
@@ -232,6 +280,12 @@ int main(int argc, char **argv) {
     print_help();
 
     while (1) {
+        int sockfd = rlist_get_sockfd(rlist);
+        if (sockfd >= 0 && !check_connection(sockfd)) {
+            printf("\nConexão com o servidor perdida. A terminar...\n");
+            break;
+        }
+
         printf("Command: ");
 
         if (fgets(line, MAX_LINE, stdin) == NULL) {
@@ -252,6 +306,11 @@ int main(int argc, char **argv) {
         else if (strcmp(line, "get_model_list") == 0) cmd_get_model_list(rlist);
         else if (strcmp(line, "size") == 0) cmd_size(rlist);
         else printf("Comando inválido. Escreve 'help' para ajuda.\n");
+
+        if (connection_lost) {
+            printf("\nConexão com o servidor perdida. A terminar...\n");
+            break;
+        }
     }
 
     rlist_disconnect(rlist);

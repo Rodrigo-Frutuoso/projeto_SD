@@ -15,4 +15,6 @@ struct rlist_t
     int sockfd;
 };
 
+int rlist_get_sockfd(struct rlist_t *rlist);
+
 #endif
