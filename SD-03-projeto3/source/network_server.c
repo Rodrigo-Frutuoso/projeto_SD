@@ -139,6 +139,13 @@ pthread_mutex_t* get_list_mutex() {
     return &list_mutex;
 }
 
+int get_num_clientes_ativos() {
+    pthread_mutex_lock(&clients_mutex);
+    int num = num_clientes_ativos;
+    pthread_mutex_unlock(&clients_mutex);
+    return num;
+}
+
 void *client_handler(void *args) {
     thread_args_t *targs = (thread_args_t *)args;
     int connsockfd = targs->client_socket;
@@ -181,7 +188,6 @@ void *client_handler(void *args) {
     int clients_now = num_clientes_ativos;
     pthread_mutex_unlock(&clients_mutex);
 
-    /* Informative message on server stdout when a client disconnects */
     printf("Connection closed from %s:%d (Total clients: %d)\n",
         client_addr, client_port, clients_now);
 

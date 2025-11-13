@@ -6,10 +6,12 @@
  */
 
 #include "network_server.h"
+#include "network_server-private.h"
 #include "list_skel.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <unistd.h>
 
 static void sigint_handler(int sig) {
     (void)sig;
@@ -50,6 +52,12 @@ int main(int argc, char **argv) {
 
     if (network_main_loop(listening_socket, list) < 0) {
         fprintf(stderr, "Erro no loop principal do servidor\n");
+    }
+
+    while (1) {
+        if (get_num_clientes_ativos() == 0)
+            break;
+        sleep(1);
     }
 
     if (listening_socket >= 0) {

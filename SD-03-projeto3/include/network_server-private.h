@@ -11,5 +11,6 @@
 
 void *client_handler(void *args);
 pthread_mutex_t* get_list_mutex();
+int get_num_clientes_ativos();
 
 #endif
