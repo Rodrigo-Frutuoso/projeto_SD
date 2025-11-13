@@ -12,9 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <poll.h>
 #include <sys/socket.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -23,30 +21,11 @@
 static int connection_lost = 0;
 
 static int check_connection(int sockfd) {
-    struct pollfd pfd;
-    pfd.fd = sockfd;
-    pfd.events = POLLIN;
+    char buf[1];
+    ssize_t n = recv(sockfd, buf, sizeof(buf), MSG_PEEK | MSG_DONTWAIT);
     
-    int ret = poll(&pfd, 1, 0);
-    
-    if (ret < 0) {
+    if (n == 0) {
         return 0;
-    }
-    
-    if (pfd.revents & (POLLHUP | POLLERR | POLLNVAL)) {
-        return 0;
-    }
-    
-    if (pfd.revents & POLLIN) {
-        char buf[1];
-        ssize_t n = recv(sockfd, buf, sizeof(buf), MSG_PEEK | MSG_DONTWAIT);
-        
-        if (n == 0) {
-            return 0;
-        }
-        if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-            return 0;
-        }
     }
     
     return 1;
