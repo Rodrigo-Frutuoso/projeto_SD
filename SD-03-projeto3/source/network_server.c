@@ -429,10 +429,12 @@ int network_server_close(int socket) {
         return -1;
     }
 
+    pthread_mutex_lock(&log_mutex);
     if (log_file != NULL) {
         fclose(log_file);
         log_file = NULL;
     }
+    pthread_mutex_unlock(&log_mutex);
 
     pthread_mutex_destroy(&log_mutex);
     pthread_mutex_destroy(&clients_mutex);
@@ -458,4 +460,11 @@ void network_server_request_shutdown(void) {
         }
     }
     pthread_mutex_unlock(&sockets_mutex);
+
+    pthread_mutex_lock(&log_mutex);
+    if (log_file != NULL) {
+        fclose(log_file);
+        log_file = NULL;
+    }
+    pthread_mutex_unlock(&log_mutex);
 }
