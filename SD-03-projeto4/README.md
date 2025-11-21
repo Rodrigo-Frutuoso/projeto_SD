@@ -1,11 +1,38 @@
-# SD-03-projeto3
+# SD-03-projeto4
 
 Grupo 03
 - Rodrigo Frutuoso - 61865
 - Simão Alexandre - 61874
 - Tiago Leite - 61863
 
-Projeto 3 — Sistemas Distribuídos 2025/2026 - **Fase 3: Servidor Multi-threaded**
+Projeto 4 — Sistemas Distribuídos 2025/2026 - **Fase 4: Chain Replication com ZooKeeper**
+
+⚠️ **PROJETO EM DESENVOLVIMENTO - FASE 4** ⚠️
+
+## 🚀 INSTALAÇÃO RÁPIDA - FASE 4
+
+Antes de compilar, é necessário instalar as dependências do ZooKeeper:
+
+```bash
+# 1. Instalar biblioteca cliente do ZooKeeper
+sudo apt-get update
+sudo apt-get install libzookeeper-mt-dev
+
+# 2. Instalar servidor ZooKeeper
+sudo apt-get install zookeeperd
+
+# 3. Iniciar ZooKeeper
+sudo systemctl start zookeeper
+sudo systemctl status zookeeper
+
+# 4. Verificar que está a funcionar (deve responder com estatísticas)
+echo stat | nc localhost 2181
+
+# 5. Compilar o projeto
+make clean && make
+```
+
+Se tudo correr bem, verá os executáveis em `binary/`.
 
 Este projeto implementa um sistema cliente-servidor de gestão de inventário para um stand automóvel com suporte para **múltiplos clientes simultâneos** usando threads POSIX.
 
@@ -275,6 +302,24 @@ quit
 ```
 
 ## Dependências
+
+### Para Fases 1-3:
 ```bash
 sudo apt-get install libprotobuf-c-dev protobuf-c-compiler
 ```
+
+### Para Fase 4 (Chain Replication):
+```bash
+# Instalar biblioteca cliente do ZooKeeper
+sudo apt-get install libzookeeper-mt-dev
+
+# Instalar e iniciar servidor ZooKeeper
+sudo apt-get install zookeeperd
+sudo systemctl start zookeeper
+sudo systemctl status zookeeper
+
+# Verificar que ZooKeeper está a correr
+echo stat | nc localhost 2181
+```
+
+**Nota:** O servidor ZooKeeper por padrão corre na porta **2181**.

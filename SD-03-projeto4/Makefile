@@ -5,7 +5,7 @@
 
 CC = gcc
 CFLAGS = -Wall -Wextra -g -Iinclude
-LDFLAGS = -lprotobuf-c -lpthread
+LDFLAGS = -lprotobuf-c -lpthread -lzookeeper_mt
 
 SRCDIR = source
 OBJDIR = object
@@ -16,7 +16,7 @@ PROVIDED_OBJS = $(OBJDIR)/data.o $(OBJDIR)/list.o
 
 LIB = $(LIBDIR)/liblist.a
 LIB_OBJS = $(PROVIDED_OBJS)
-COMMON_OBJS = $(OBJDIR)/message-private.o $(OBJDIR)/sdmessage.pb-c.o
+COMMON_OBJS = $(OBJDIR)/message-private.o $(OBJDIR)/sdmessage.pb-c.o $(OBJDIR)/zk_utils.o
 SERVER_OBJS = $(OBJDIR)/list_server.o $(OBJDIR)/network_server.o $(OBJDIR)/list_skel.o
 CLIENT_OBJS = $(OBJDIR)/list_client.o $(OBJDIR)/network_client.o $(OBJDIR)/client_stub.o
 
