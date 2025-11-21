@@ -8,6 +8,8 @@
 #include "chain_server.h"
 #include "zk_utils.h"
 #include "client_stub.h"
+#include "list.h"
+#include "data.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,7 +33,7 @@ chain_server_t *chain_server_create(void) {
     server->next_server = NULL;
     server->is_tail = 1;  // Assume tail até encontrar sucessor
     server->is_head = 1;  // Assume head até encontrar antecessor
-    
+
     // Inicializar mutex
     if (pthread_mutex_init(&server->replication_mutex, NULL) != 0) {
         fprintf(stderr, "Erro ao inicializar mutex de replicação\n");
@@ -93,14 +95,14 @@ int chain_server_connect_zk(chain_server_t *server, const char *zk_host, int ser
     // Obter IP local do servidor
     char server_ip[INET_ADDRSTRLEN];
     strcpy(server_ip, "127.0.0.1");  // Por simplicidade, usar localhost
-    
+
     // Criar string "IP:porto" para armazenar no ZNode
     char node_data[256];
     snprintf(node_data, sizeof(node_data), "%s:%d", server_ip, server_port);
 
     // Criar ZNode efémero sequencial
     char path_buffer[512];
-    if (zk_create_node_ephemeral_seq(server->zh, node_data, 
+    if (zk_create_node_ephemeral_seq(server->zh, node_data,
                                      path_buffer, sizeof(path_buffer)) < 0) {
         fprintf(stderr, "Erro ao criar ZNode efémero sequencial\n");
         return -1;
@@ -137,11 +139,11 @@ int chain_server_find_successor(chain_server_t *server) {
     char *successor_id = NULL;
     for (int32_t i = 0; i < children->count; i++) {
         const char *child_id = children->data[i];
-        
+
         // Comparar com nosso ID
         if (zk_compare_node_ids(child_id, server->node_id) > 0) {
             // Este nó vem depois do nosso
-            if (successor_id == NULL || 
+            if (successor_id == NULL ||
                 zk_compare_node_ids(child_id, successor_id) < 0) {
                 successor_id = (char *)child_id;
             }
@@ -152,17 +154,17 @@ int chain_server_find_successor(chain_server_t *server) {
         // Encontrou sucessor
         strncpy(server->successor_id, successor_id, sizeof(server->successor_id) - 1);
         server->is_tail = 0;
-        
+
         // Obter IP:porto do sucessor
         char successor_path[512];
-        snprintf(successor_path, sizeof(successor_path), "%s/%s", 
+        snprintf(successor_path, sizeof(successor_path), "%s/%s",
                 ZNODE_PATH_CHAIN, successor_id);
-        
+
         char successor_addr[256];
         int addr_len = sizeof(successor_addr);
         if (zk_get_node_data(server->zh, successor_path, successor_addr, &addr_len) == 0) {
             printf("Sucessor encontrado: %s (%s)\n", successor_id, successor_addr);
-            
+
             // Conectar ao sucessor usando client_stub
             server->next_server = rlist_connect(successor_addr);
             if (server->next_server == NULL) {
@@ -221,9 +223,9 @@ int chain_server_sync_from_predecessor(chain_server_t *server, struct list_t *li
     char *predecessor_id = NULL;
     for (int32_t i = 0; i < children->count; i++) {
         const char *child_id = children->data[i];
-        
+
         if (zk_compare_node_ids(child_id, server->node_id) < 0) {
-            if (predecessor_id == NULL || 
+            if (predecessor_id == NULL ||
                 zk_compare_node_ids(child_id, predecessor_id) > 0) {
                 predecessor_id = (char *)child_id;
             }
@@ -234,21 +236,49 @@ int chain_server_sync_from_predecessor(chain_server_t *server, struct list_t *li
         // Obter endereço do antecessor
         char pred_path[512];
         snprintf(pred_path, sizeof(pred_path), "%s/%s", ZNODE_PATH_CHAIN, predecessor_id);
-        
+
         char pred_addr[256];
         int addr_len = sizeof(pred_addr);
         if (zk_get_node_data(server->zh, pred_path, pred_addr, &addr_len) == 0) {
-            printf("Sincronizando estado com antecessor: %s (%s)\n", 
+            printf("Sincronizando estado com antecessor: %s (%s)\n",
                    predecessor_id, pred_addr);
-            
-            // TODO: Implementar sincronização da lista
-            // Por agora, apenas conecta e desconecta
+
+            // Conectar ao antecessor
             struct rlist_t *pred_conn = rlist_connect(pred_addr);
-            if (pred_conn != NULL) {
-                // Aqui seria feita a sincronização da lista
-                // Será implementado na próxima fase
-                rlist_disconnect(pred_conn);
+            if (pred_conn == NULL) {
+                fprintf(stderr, "Erro ao conectar ao antecessor para sincronização\n");
+                zk_free_string_vector(children);
+                return -1;
             }
+
+            // Obter todos os carros do antecessor (ano = -1 retorna todos)
+            struct data_t **cars = rlist_get_by_year(pred_conn, -1);
+            if (cars != NULL) {
+                int count = 0;
+
+                // Inserir cada carro na lista local
+                for (int i = 0; cars[i] != NULL; i++) {
+                    // Adicionar à lista local (SEM registar no log)
+                    if (list_add(list, cars[i]) == 0) {
+                        count++;
+                    } else {
+                        fprintf(stderr, "Aviso: Erro ao adicionar carro durante sincronização\n");
+                    }
+
+                    // Libertar memória do carro
+                    data_destroy(cars[i]);
+                }
+
+                // Libertar array
+                free(cars);
+
+                printf("Sincronização concluída: %d carro(s) copiado(s)\n", count);
+            } else {
+                printf("Antecessor não tem carros na lista (ou erro na consulta)\n");
+            }
+
+            // Desconectar do antecessor
+            rlist_disconnect(pred_conn);
         }
     }
 
@@ -271,22 +301,22 @@ int chain_server_propagate(chain_server_t *server, MessageT *msg) {
 
     // TODO: Implementar propagação real
     // Será implementado na fase de propagação de operações
-    
+
     return 0;
 }
 
 /**
  * Callback chamado quando há mudanças na cadeia (watch do ZooKeeper).
  */
-void chain_server_watcher(zhandle_t *zh, int type, int state, 
+void chain_server_watcher(zhandle_t *zh, int type, int state,
                           const char *path, void *watcherCtx) {
     (void)zh;
     (void)state;
     (void)path;
-    
+
     if (type == ZOO_CHILD_EVENT) {
         printf("Detetada mudança na cadeia de servidores\n");
-        
+
         chain_server_t *server = (chain_server_t *)watcherCtx;
         if (server != NULL) {
             // Reprocessar a cadeia para encontrar novo sucessor
