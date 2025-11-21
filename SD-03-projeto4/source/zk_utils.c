@@ -24,9 +24,9 @@ zhandle_t *zk_connect(const char *host, watcher_fn watcher, void *context) {
     }
 
     zhandle_t *zh = zookeeper_init(host, watcher, ZK_TIMEOUT, 0, context, 0);
-    
+
     if (zh == NULL) {
-        fprintf(stderr, "Erro ao conectar ao ZooKeeper em %s: %s\n", 
+        fprintf(stderr, "Erro ao conectar ao ZooKeeper em %s: %s\n",
                 host, strerror(errno));
         return NULL;
     }
@@ -69,7 +69,7 @@ int zk_create_chain_znode(zhandle_t *zh) {
         printf("ZNode %s já existe\n", ZNODE_PATH_CHAIN);
         return 0;
     } else {
-        fprintf(stderr, "Erro ao criar ZNode %s: %s\n", 
+        fprintf(stderr, "Erro ao criar ZNode %s: %s\n",
                 ZNODE_PATH_CHAIN, zerror(rc));
         return -1;
     }
@@ -78,7 +78,7 @@ int zk_create_chain_znode(zhandle_t *zh) {
 /**
  * Cria um ZNode efémero sequencial filho de /chain.
  */
-int zk_create_node_ephemeral_seq(zhandle_t *zh, const char *data, 
+int zk_create_node_ephemeral_seq(zhandle_t *zh, const char *data,
                                   char *path_buffer, int path_buffer_len) {
     if (zh == NULL || data == NULL || path_buffer == NULL) {
         fprintf(stderr, "zk_create_node_ephemeral_seq: argumentos inválidos\n");
@@ -87,7 +87,7 @@ int zk_create_node_ephemeral_seq(zhandle_t *zh, const char *data,
 
     // ZOO_EPHEMERAL | ZOO_SEQUENCE = efémero e sequencial
     int rc = zoo_create(zh, ZNODE_PATH_NODE, data, strlen(data),
-                       &ZOO_OPEN_ACL_UNSAFE, 
+                       &ZOO_OPEN_ACL_UNSAFE,
                        ZOO_EPHEMERAL | ZOO_SEQUENCE,
                        path_buffer, path_buffer_len);
 
@@ -95,7 +95,7 @@ int zk_create_node_ephemeral_seq(zhandle_t *zh, const char *data,
         printf("ZNode efémero sequencial criado: %s\n", path_buffer);
         return 0;
     } else {
-        fprintf(stderr, "Erro ao criar ZNode efémero sequencial: %s\n", 
+        fprintf(stderr, "Erro ao criar ZNode efémero sequencial: %s\n",
                 zerror(rc));
         return -1;
     }
@@ -119,7 +119,7 @@ struct String_vector *zk_get_chain_children(zhandle_t *zh, int watch) {
     int rc = zoo_get_children(zh, ZNODE_PATH_CHAIN, watch, strings);
 
     if (rc != ZOK) {
-        fprintf(stderr, "Erro ao obter filhos de %s: %s\n", 
+        fprintf(stderr, "Erro ao obter filhos de %s: %s\n",
                 ZNODE_PATH_CHAIN, zerror(rc));
         free(strings);
         return NULL;
@@ -193,7 +193,7 @@ const char *zk_extract_node_id(const char *full_path) {
 
     // Procurar última '/'
     const char *last_slash = strrchr(full_path, '/');
-    
+
     if (last_slash == NULL) {
         return full_path;
     }

@@ -16,7 +16,7 @@ PROVIDED_OBJS = $(OBJDIR)/data.o $(OBJDIR)/list.o
 
 LIB = $(LIBDIR)/liblist.a
 LIB_OBJS = $(PROVIDED_OBJS)
-COMMON_OBJS = $(OBJDIR)/message-private.o $(OBJDIR)/sdmessage.pb-c.o $(OBJDIR)/zk_utils.o
+COMMON_OBJS = $(OBJDIR)/message-private.o $(OBJDIR)/sdmessage.pb-c.o $(OBJDIR)/zk_utils.o $(OBJDIR)/chain_server.o
 SERVER_OBJS = $(OBJDIR)/list_server.o $(OBJDIR)/network_server.o $(OBJDIR)/list_skel.o
 CLIENT_OBJS = $(OBJDIR)/list_client.o $(OBJDIR)/network_client.o $(OBJDIR)/client_stub.o
 
@@ -39,7 +39,7 @@ list_client: $(BINDIR)/list_client
 $(LIB): $(LIB_OBJS) | $(LIBDIR)
 	@ar -rcs $@ $^
 
-$(BINDIR)/list_server: $(SERVER_OBJS) $(COMMON_OBJS) $(LIB) | $(BINDIR)
+$(BINDIR)/list_server: $(SERVER_OBJS) $(COMMON_OBJS) $(OBJDIR)/client_stub.o $(OBJDIR)/network_client.o $(LIB) | $(BINDIR)
 	@$(CC) $^ $(LDFLAGS) -o $@
 
 $(BINDIR)/list_client: $(CLIENT_OBJS) $(COMMON_OBJS) $(LIB) | $(BINDIR)
